@@ -1,0 +1,31 @@
+# Base input for the pear-potential test case of the McLics paper.
+# run.sh copies this file for every run and overrides size, geometry, B1, C, temperatures and seed.
+
+Nx 21
+Ny 21
+Nz 21
+
+potential pear
+A  1.5
+B1 0.09
+C  0.3
+
+evol thermal
+Ti  1.4
+Tf  0.1
+dT  -0.05
+MCT 5000
+MCS 2000
+
+ic random
+seed 1
+
+geometry sphere
+xbound free
+ybound free
+zbound free
+
+anchoring_type 0 homeotropic
+W 0 1.5
+
+radial sphere

@@ -1,0 +1,36 @@
+# Phase diagram (T vs B) of Dhakal & Selinger, PRE 81, 031704 (2010), panel (c) of the phase-diagram figure.
+# Digitized BY EYE from a screenshot (approximate, ~0.02 in T); check against the original before publishing,
+# or replace with values from the authors/WebPlotDigitizer.
+# line: NI = isotropic-nematic, NP = nematic-polar, IP = direct isotropic-polar
+B,T,line
+0.02,1.10,NI
+0.03,1.10,NI
+0.04,1.10,NI
+0.08,1.10,NI
+0.12,1.10,NI
+0.16,1.10,NI
+0.20,1.12,NI
+0.24,1.12,NI
+0.28,1.14,NI
+0.32,1.14,NI
+0.02,0.12,NP
+0.03,0.16,NP
+0.04,0.20,NP
+0.08,0.38,NP
+0.12,0.54,NP
+0.16,0.68,NP
+0.20,0.80,NP
+0.24,0.92,NP
+0.28,1.02,NP
+0.32,1.10,NP
+0.36,1.16,IP
+0.40,1.20,IP
+0.44,1.24,IP
+0.48,1.29,IP
+0.52,1.32,IP
+0.56,1.38,IP
+0.60,1.44,IP
+0.64,1.47,IP
+0.68,1.53,IP
+0.72,1.59,IP
+0.76,1.65,IP

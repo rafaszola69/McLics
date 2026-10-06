@@ -1,0 +1,30 @@
+# Build products
+build/
+/mclics
+/mclics_debug
+*.o
+__pycache__/
+
+# Simulation output (written in the run directory)
+po.dat
+po_avg.dat
+ic.csv
+director_field_*.csv
+director_field_*.csv.gz
+run.log
+/log
+mclics_*.png
+
+# Campaign data and generated figures (data will be archived separately, e.g. Zenodo)
+runs*/
+figs*/
+figures.tex
+.running
+DONE
+
+# Kept out of the repository: test copies brought from the GPU machine, unpublished study, article text
+# (lives on Overleaf) and the assistant's notes
+/teste/
+/pear/
+/artigo/latex/
+CLAUDE.md

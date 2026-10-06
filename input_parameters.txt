@@ -1,0 +1,42 @@
+Nx 31                # grid size
+Ny 31                # grid size
+Nz 31                # grid size
+MCS 100
+MCT 15000
+
+Ti  0.1
+Tf  0.01
+dT  -0.01
+potential ghrl #(ghrl ou ll)
+k11 1.48
+k22 1
+k33 2.28
+nk 1
+#constantes do E7
+
+p0 	60
+evol thermal #(step ou thermal)
+fn   20
+ic random
+#theta_0	88
+#phi_0	0
+#p0_i    	66.66666666666666666667 
+ic_file director_field_2.csv
+
+geometry sphere #(bulk, slab, sphere, custom)
+boundary_file sep.csv 
+xbound periodic
+ybound free
+#zbound periodic
+
+anchoring_type 0 rp_tangent    ##tipo de ancoramento
+# tipos definidos, fg, rp e homeotropic
+
+W       0 1    #força de ancoramento       
+phi_s   0 0        #n_s=sin(theta_s)(cos(phi_s)i+sin(phi_s)j)+ cos(theta_s)k
+theta_s 0 88 
+
+anchoring_type 1 rp
+W       1 1
+phi_s   1 0
+theta_s 1 88 

@@ -7,10 +7,12 @@ make_figures.py — Freedericksz test problem (see run.sh): deformation angle ve
 
 For each cell (splay, twist, bend) and field value, the deformation angle is the mean over the two middle layers of
 the cell of acos(|n . n0|), with n0 the initial easy axis (x for the planar cells, z for the homeotropic one),
-averaged over the seeds. The thermal fluctuations give a baseline angle of a few degrees below the threshold.
+averaged over the seeds. Below the threshold the angle stays at a small thermal baseline (about 0.5 degrees at
+T = 0.0008).
 
 Critical field E_c: above the threshold, theta_m^2 grows linearly with E - E_c. E_c is where the straight line fitted
-to theta^2 versus E, for 15 < theta < 40 degrees, reaches the mean theta^2 of the points well below the threshold.
+to theta^2 versus E, for theta between max(3 x baseline, 2) and 40 degrees, reaches the mean theta^2 of the points
+well below the threshold (baseline = median angle of the first five field values).
 The field where the angle crosses 20 degrees (interpolated) is also given. From E_c^2 ~ K_i:
 K1/K2 = (E_c splay / E_c twist)^2 and K3/K2 = (E_c bend / E_c twist)^2 (input: 1.48 and 2.28).
 
@@ -79,17 +81,18 @@ def angle_curve(run, axis):
 
 def critical_field(E, th):
     """(E_c from the theta^2 fit, E at 20 degrees); None where not determined."""
-    above = np.where(th > 15)[0]
+    lo = max(3 * np.median(th[:5]), 2.0)
+    above = np.where(th > lo)[0]
     if len(above) == 0:
         return None, None
-    i15 = above[0]
+    ion = above[0]
     e20 = None
     for i in range(1, len(E)):
         if th[i - 1] < 20 <= th[i]:
             e20 = E[i - 1] + (20 - th[i - 1]) * (E[i] - E[i - 1]) / (th[i] - th[i - 1])
             break
-    base = th[E < E[i15] - 0.05]
-    sel = (E >= E[i15]) & (th > 15) & (th < 40)
+    base = th[E < E[ion] - 0.05]
+    sel = (E >= E[ion]) & (th > lo) & (th < 40)
     if len(base) < 3 or sel.sum() < 3:
         return None, e20
     b = np.mean(base ** 2)

@@ -5,7 +5,8 @@
 #
 # Freedericksz transition in three cells (test problem "Elastic Behavior in Nematic Liquid Crystals" of the paper,
 # after Le Masurier et al.): GHRL potential (no chirality) with the E7 elastic constants (K1/K2 = 1.48, K3/K2 = 2.28) in a
-# 10 x 10 x 16 slab (x, y periodic), electric mode with the field swept from Ei to Ef.
+# 10 x 10 x 16 slab (x, y periodic), electric mode with the field swept from Ei to Ef, at the very low temperature of
+# Le Masurier et al. (T = 0.0008), where the lattice model follows the continuum elastic theory.
 #
 #   splay  planar anchoring along x, field along z, dielectric anisotropy +DEPS
 #   twist  planar anchoring along x, field along y, +DEPS
@@ -21,7 +22,7 @@
 #   JOBS=3 ./run.sh               simultaneous runs
 #   EVOL=electric ./run.sh        run on the CPU instead of the GPU (default: electricGPU)
 #   SEEDS="1 2 3" ./run.sh        replicas (default: 1 2)
-#   T=0.1 W=10 MCT=40000 MCS=1000 EI=0.1 EF=1.2 DE=0.005 DEPS=0.25 ./run.sh    (defaults shown)
+#   T=0.0008 W=10 MCT=40000 MCS=1000 EI=0.1 EF=1.2 DE=0.005 DEPS=0.25 ./run.sh    (defaults shown)
 #
 # Each run goes to runs/<cell>/seed<s>/; runs with DONE are skipped. Snapshots are gzipped.
 # Afterwards: python3 make_figures.py
@@ -32,7 +33,7 @@ STAGE=${1:-all}
 JOBS=${JOBS:-1}
 EVOL=${EVOL:-electricGPU}
 SEEDS=${SEEDS:-"1 2"}
-T=${T:-0.1}
+T=${T:-0.0008}
 W=${W:-10}
 MCT=${MCT:-40000}
 MCS=${MCS:-1000}

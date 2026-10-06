@@ -20,7 +20,7 @@ cd artigo/freedericksz
 python3 make_figures.py
 ```
 
-Defaults: T = 0.1, W = 10 on both plates, field 0.1 → 1.2 in steps of 0.005, 40000 sweeps at each field value
+Defaults: T = 0.0008 (as in Le Masurier et al.), W = 10 on both plates, field 0.1 → 1.2 in steps of 0.005, 40000 sweeps at each field value
 before 1000 measurement sweeps. All can be changed through variables (see the header of `run.sh`).
 
 **Do not shorten the sweep.** Near the threshold the deformation grows more and more slowly, and the slower the
@@ -35,5 +35,5 @@ the thresholds are overestimated (the twist one most) and the ratios of elastic 
 - `figs/freedericksz_angles.csv` — the curves of the figure.
 
 The deformation angle is the mean of acos(|n · n0|) over the two middle layers, with n0 the initial easy axis. The
-critical field is where the straight line fitted to θ² versus E (15° < θ < 40°) reaches the thermal baseline of θ²
-below the threshold; the field where θ crosses 20° is also reported.
+critical field is where the straight line fitted to θ² versus E (from 3 times the thermal baseline angle, at least
+2°, up to 40°) reaches the baseline of θ² below the threshold; the field where θ crosses 20° is also reported.

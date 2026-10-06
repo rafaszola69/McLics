@@ -3,277 +3,333 @@
 # McLics
 ### Monte Carlo Liquid Crystal Simulator
 
-*Simulador Monte Carlo de cristais líquidos nemáticos, com núcleo em C++/CUDA.*
+*Monte Carlo simulator for nematic and polar liquid crystals on a cubic lattice, written in C++/CUDA.*
 
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=cplusplus&logoColor=white)
 ![CUDA](https://img.shields.io/badge/CUDA-11%2B-76B900?logo=nvidia&logoColor=white)
 ![OpenMP](https://img.shields.io/badge/OpenMP-parallel-blue)
 ![GSL](https://img.shields.io/badge/GSL-2.x-orange)
-![status](https://img.shields.io/badge/status-Iniciação%20Científica-informational)
+![License: GPL v3+](https://img.shields.io/badge/license-GPL%20v3%2B-blue)
 
-**Autor:** Eric Kamakawa &nbsp;·&nbsp; **Orientadores:** Prof. Dr. Rafael Zola, Prof. Dr. Rodolfo Teixeira
+**Author:** Eric Kamakawa &nbsp;·&nbsp; **Advisors:** Prof. Dr. Rafael Zola, Prof. Dr. Rodolfo Teixeira
 
-**Curso:** Engenharia da Computação — UTFPR
+**Computer Engineering — UTFPR** &nbsp;·&nbsp; full list of contributors in [AUTHORS](AUTHORS)
 
 </div>
 
 ---
 
-## Sumário
+## Contents
 
-- [Visão Geral](#visão-geral)
-- [Dependências](#dependências)
-- [Compilação](#compilação)
-- [Uso](#uso)
-- [Arquivo de Parâmetros](#arquivo-de-parâmetros)
-- [Referência Completa de Parâmetros](#referência-completa-de-parâmetros)
-- [Geometrias](#geometrias)
-- [Modos de Evolução](#modos-de-evolução)
-- [Potenciais](#potenciais)
-- [Condições de Contorno](#condições-de-contorno)
-- [Ancoragem de Superfície](#ancoragem-de-superfície)
-- [Campo Elétrico](#campo-elétrico)
-- [Saídas](#saídas)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Observações](#observações)
+- [Overview](#overview)
+- [Dependencies](#dependencies)
+- [Building](#building)
+- [Usage](#usage)
+- [Input file](#input-file)
+- [Parameter reference](#parameter-reference)
+- [Geometries](#geometries)
+- [Evolution modes](#evolution-modes)
+- [Potentials](#potentials)
+- [Boundary conditions](#boundary-conditions)
+- [Surface anchoring](#surface-anchoring)
+- [Electric field](#electric-field)
+- [Output](#output)
+- [Project layout](#project-layout)
+- [Notes](#notes)
+- [License](#license)
 
 ---
 
-## Visão Geral
+## Overview
 
-O **McLics** simula o comportamento de moléculas de cristal líquido nemático em uma rede cúbica tridimensional, utilizando o método de Monte Carlo com critério de Metropolis. A cada passo, o simulador calcula a energia de interação entre vizinhos próximos de cada sítio da rede e aceita ou rejeita perturbações angulares das moléculas.
+**McLics** simulates nematic (and polar) liquid crystals on a three-dimensional cubic lattice with the Metropolis
+Monte Carlo method. Each lattice site carries a unit vector (the molecular director), which interacts with its six
+nearest neighbours through a pair potential, with surfaces through an anchoring energy and, optionally, with an
+applied field. Each Monte Carlo sweep proposes one random rotation per site and accepts or rejects it with the
+Metropolis rule.
 
-Ao final de cada temperatura (ou cada passo/intensidade de campo, dependendo do modo), são calculados e salvos o **parâmetro de ordem escalar `S`** e a **energia média `E`** do sistema — além de um snapshot completo do campo diretor.
+At each temperature (or field value, or block, depending on the mode) the program writes the **scalar order
+parameter `S`**, the **mean energy `E`**, their variances and optional extra observables to `po.dat`, and a full
+snapshot of the director field.
 
-O núcleo de cálculo é escrito em **C++/CUDA** e compila em dois sabores:
+The computational core is written in **C++/CUDA** and can be built in two flavours:
 
-| Build | Comando | Requer NVCC? | Suporta modos `*GPU`? |
+| Build | Command | Needs nvcc? | Runs the `*GPU` modes? |
 |---|---|:---:|:---:|
-| Completo (CPU + GPU) | `make` | Sim | Sim |
-| Somente CPU | `make CPU` | Não | Não |
+| Full (CPU + GPU) | `make` | Yes | Yes |
+| CPU only | `make CPU` | No | No |
 
-Em ambos os casos, o binário gerado é `./mclics`, e o paralelismo em CPU é feito via OpenMP.
+In both cases the program is `./mclics`; the CPU code is parallelized with OpenMP.
 
 ---
 
-## Dependências
+## Dependencies
 
-| Dependência | Versão mínima | Necessário para |
+| Dependency | Minimum version | Needed for |
 |---|---|---|
-| GCC | 9+ | Compilação (CPU e GPU) |
-| NVCC (CUDA Toolkit) | 11+ | Compilação com suporte a GPU (`make`) |
-| OpenMP | — | Paralelismo em CPU |
-| GSL (GNU Scientific Library) | 2.x | Geração de números aleatórios e álgebra linear (autovalores do tensor Q) |
+| GCC | 9+ | Building (CPU and GPU) |
+| NVCC (CUDA Toolkit) | 11+ | GPU support (`make`) |
+| OpenMP | — | CPU parallelism |
+| GSL (GNU Scientific Library) | 2.x | Random numbers and linear algebra (eigenvalues of the Q tensor) |
 
-Instalação das dependências no Ubuntu/Debian:
+On Ubuntu/Debian:
 
 ```bash
 sudo apt install g++ libgsl-dev libomp-dev
-# Para suporte a GPU, instale o CUDA Toolkit compatível com seu driver:
+# For GPU support, install the CUDA Toolkit that matches your driver:
 # https://developer.nvidia.com/cuda-downloads
 ```
 
 ---
 
-## Compilação
+## Building
 
 ```bash
-make            # binário completo (CPU + GPU), requer nvcc
-make CPU        # binário somente CPU, não requer CUDA Toolkit
-make clean      # remove binário e artefatos de build
-make clean-data # remove saídas de simulações anteriores (ic.csv, po.dat, director_field_*.csv)
+make            # full program (CPU + GPU), needs nvcc; without nvcc, builds the CPU version
+make CPU        # CPU-only program, no CUDA Toolkit needed
+make clean      # remove the program and the build files
+make clean-data # remove simulation output in this folder (ic.csv, po.dat, director_field_*.csv)
 ```
 
-> O binário `mclics` gerado por `make` **também roda simulações em CPU normalmente** — o dispositivo usado em cada execução é decidido pelo parâmetro `evol` do arquivo de entrada (veja [Modos de Evolução](#modos-de-evolução)), não por uma flag de linha de comando.
+Each version is built in `build/gpu/` or `build/cpu/` and copied to `./mclics`, so `./mclics` is always the
+version built last.
+
+> The program built with `make` **also runs CPU simulations**: the device used by a run is chosen by the `evol`
+> parameter of the input file (see [Evolution modes](#evolution-modes)), not by a command-line option.
 
 ---
 
-## Uso
+## Usage
 
 ```bash
-./mclics <arquivo_de_parâmetros>
+./mclics <input_file>
 ```
 
-**Exemplo:**
+The output files are written to the current directory. If no input file is given, the program runs with the
+built-in defaults (see the tables below).
 
-```bash
-./mclics params.txt
-```
-
-Se nenhum arquivo for informado, o simulador roda com os valores padrão internos (ver tabelas abaixo).
+All parameters are checked before the run starts: impossible values (negative sizes or temperatures, a temperature
+step pointing away from `Tf`, invalid elastic constants, an odd number of sites along a periodic direction, ...)
+are reported together and the program stops without touching the output of a previous run.
 
 ---
 
-## Arquivo de Parâmetros
+## Input file
 
-O arquivo de parâmetros é um arquivo de texto com um parâmetro por linha, no formato `chave valor`. Linhas começando com `#` são comentários e são ignoradas. Os nomes dos parâmetros **não são case-sensitive**.
+The input file is a text file with one parameter per line, in the form `name value`. Everything after `#` is a
+comment. Parameter names are **not case-sensitive**. Parameters that belong to a surface take the surface number
+first (`W 0 1.5`).
 
-Exemplo completo:
+Complete example:
 
 ```
-# Rede
+# Lattice
 Nx          30
 Ny          30
 Nz          30
-Nk          1                # obrigatório ser 1 (veja Observações)
 
-# Geometria: bulk | slab | sphere | custom
+# Geometry: bulk | slab | sphere | custom
 geometry    bulk
 
-# Condições de contorno: free | periodic
+# Boundary conditions: free | periodic
 xbound      periodic
 ybound      periodic
 zbound      periodic
 
-# Potencial: ll | ghrl | pear
+# Potential: ll | ghrl | pear
 potential   ll
 A           1.0
 
-# Modo de evolução: thermal | step | quench | electric (ou com sufixo GPU)
+# Evolution mode: thermal | step | quench | electric (or with the GPU suffix)
 evol        thermal
 
-# Temperatura inicial, final e passo
+# Initial temperature, final temperature and step
 Ti          1.2
-Tf          0.0
+Tf          0.1
 dT         -0.02
 
-# Passos Monte Carlo de termalização e medição
+# Monte Carlo sweeps for thermalization and measurement at each temperature
 MCT         500
 MCS         200
 
-# Condição inicial: random | homogeneous | ic_file | cholesteric
+# Initial condition: random | homogeneous | ic_file | cholesteric
 ic          random
+seed        1
 ```
 
 ---
 
-## Referência Completa de Parâmetros
+## Parameter reference
 
-#### Rede
+#### Lattice
 
-| Parâmetro | Valores | Padrão | Descrição |
+| Parameter | Values | Default | Description |
 |---|---|---|---|
-| `Nx`, `Ny`, `Nz` | inteiro | 16 | Tamanho da rede em cada eixo |
-| `Nk` (`neighbour_kind`) | `1` | 1 | Ordem de vizinhança considerada. **Só `1` é suportado** — outro valor encerra o programa com erro |
-| `geometry` | `bulk` / `slab` / `sphere` / `custom` | `bulk` | Geometria da simulação |
-| `xbound`, `ybound`, `zbound` | `free` / `periodic` | `free` | Condição de contorno por eixo |
+| `Nx`, `Ny`, `Nz` | integer | 16 | Lattice size along each axis |
+| `Nk` (`neighbour_kind`) | `1` | 1 | Neighbour shell. **Only `1` (nearest neighbours) is supported**; any other value stops the program |
+| `geometry` | `bulk` / `slab` / `sphere` / `custom` | `bulk` | Geometry of the sample |
+| `boundary_file` | path | — | Geometry file (`geometry custom`) |
+| `xbound`, `ybound`, `zbound` | `free` / `periodic` | `free` | Boundary condition along each axis |
 
-#### Potencial e Constantes Elásticas
+#### Potential and elastic constants
 
-| Parâmetro | Valores | Padrão | Descrição |
+| Parameter | Values | Default | Description |
 |---|---|---|---|
-| `potential` | `ll` / `ghrl` / `pear` | `ll` | Potencial de interação |
-| `A` | float | 1.0 | Acoplamento nemático (LL e pear) |
-| `B1` | float | 0.04 | Acoplamento polar `B` do potencial pear |
-| `C` | float | 0.3 | Acoplamento splay–polarização do potencial pear |
-| `k11`, `k22`, `k33` | float | 1.0 | Constantes elásticas de Frank — splay, twist e bend (GHRL) |
-| `p0` | float | 0 | Passo colestérico (GHRL; `0` = nemático puro) |
+| `potential` | `ll` / `ghrl` / `pear` | `ll` | Pair potential |
+| `A` | float | 1.0 | Nematic coupling (LL and pear) |
+| `B1` | float | 0.04 | Polar coupling `B` of the pear potential |
+| `C` | float | 0.3 | Splay–polarization coupling of the pear potential |
+| `k11`, `k22`, `k33` | float | 1.0 | Frank elastic constants (splay, twist, bend) of the GHRL potential; only their ratios matter |
+| `p0` | float | 0 | Natural cholesteric pitch in lattice spacings (GHRL; `0` = nematic) |
 
-#### Evolução e Monte Carlo
+#### Evolution and Monte Carlo
 
-| Parâmetro | Aliases | Padrão | Descrição |
+| Parameter | Aliases | Default | Description |
 |---|---|---|---|
-| `evol` | `mode` | `thermal` | Modo de evolução — `thermal`, `step`, `quench`, `electric`, ou com sufixo `GPU` (ex. `thermalGPU`) para rodar em placa de vídeo |
-| `Ti`, `Tf`, `dT` | — | 1.2 / 0.0 / -0.02 | Temperatura inicial, final e passo |
-| `MCT` | — | 100 | Passos de termalização por temperatura |
-| `MCS` | — | 100 | Passos de medição por temperatura |
-| `fn` | — | 1 | Número de blocos independentes (modos `step`/`quench`) |
-| `first_file_number` | `initial_output` | 0 | Número do primeiro arquivo de saída |
-| `radial` | — | `sphere` se `geometry sphere`, senão `none` | Colunas radiais no `po.dat`: `sphere`, `cylinder`, `both` ou `none`. Veja [`po.dat`](#podat) |
+| `evol` | `mode` | `thermal` | Evolution mode: `thermal`, `step`, `quench`, `electric`, or the same with the `GPU` suffix (e.g. `thermalGPU`) to run on the graphics card |
+| `Ti`, `Tf`, `dT` | — | 1.2 / 0.0 / -0.02 | Initial temperature, final temperature and step. `T = 0` is allowed (zero-temperature Metropolis) |
+| `MCT` | — | 100 | Thermalization sweeps at each temperature (or field value, or block) |
+| `MCS` | — | 100 | Measurement sweeps at each temperature (one sample per sweep) |
+| `MCQ` | `quench_steps` | `MCT` | `quench` mode only: sweeps at `Tf` before measuring |
+| `fn` | — | 1 | Number of blocks (`step` and `quench` modes) |
+| `first_file_number` | `initial_output` | 0 | Number of the first block (`step` and `quench` modes) |
+| `seed` | — | 1 | Seed of the random number generators |
+| `radial` | — | `sphere` if `geometry sphere`, otherwise `none` | Radial columns in `po.dat`: `sphere`, `cylinder`, `both` or `none`. See [`po.dat`](#podat) |
 
-#### Condição Inicial
+#### Initial condition
 
-| Parâmetro | Valores | Padrão | Descrição |
+| Parameter | Values | Default | Description |
 |---|---|---|---|
-| `ic` | `random` / `homogeneous` / `ic_file` / `cholesteric` | `random` | Tipo de condição inicial |
-| `ic_file` | caminho | — | Arquivo CSV de condição inicial (quando `ic ic_file`) |
-| `phi_0`, `theta_0` | float (graus) | 0 | Ângulos inicial (modos `homogeneous`/`cholesteric`) |
-| `p0_i` | float | 0 | Passo inicial para condição colestérica |
+| `ic` | `random` / `homogeneous` / `ic_file` / `cholesteric` | `random` | Type of initial condition |
+| `ic_file` | path | — | CSV file with the initial director field (`ic ic_file`); a snapshot `director_field_*.csv` can be used directly |
+| `theta_0`, `phi_0` | float (degrees) | 0 | Polar and azimuthal angles of the director (`homogeneous`), or polar angle and initial azimuth of the helix (`cholesteric`) |
+| `p0_i` | float | 0 | Pitch of the `cholesteric` initial condition (helix along z); `0` uses `p0` |
 
-#### Ancoragem de Superfície (por índice de superfície `n`)
+#### Surface anchoring (for each surface number `n`)
 
-| Parâmetro | Descrição |
+| Parameter | Description |
 |---|---|
-| `anchoring_type n <tipo>` | Tipo de ancoragem da superfície `n` |
-| `W n <valor>` | Força de ancoragem da superfície `n` |
-| `phi_s n <valor>` | Ângulo azimutal de ancoragem da superfície `n` |
-| `theta_s n <valor>` | Ângulo polar de ancoragem da superfície `n` |
+| `anchoring_type n <type>` | Anchoring type of surface `n` |
+| `W n <value>` | Anchoring strength of surface `n` |
+| `theta_s n <degrees>` | Polar angle of the easy axis of surface `n` (lab frame; `0` = z axis) |
+| `phi_s n <degrees>` | Azimuthal angle of the easy axis of surface `n` |
 
-Tipos disponíveis: `homeotropic`, `fg` (Fournier–Galatola), `rp` (Rapini–Papoular), `rp_tangent` (Rapini–Papoular planar para superfícies curvas), `strong`.
+Types: `homeotropic`, `rp` (Rapini–Papoular), `rp_tangent` (planar Rapini–Papoular for curved surfaces), `fg`
+(Fournier–Galatola-like, degenerate planar), and `homeotropic_ghrl`, `rp_ghrl`, `fg_ghrl` for the GHRL potential.
+See [Surface anchoring](#surface-anchoring).
 
-#### Campo Elétrico
+#### Electric field
 
-| Parâmetro | Aliases | Descrição |
+| Parameter | Aliases | Description |
 |---|---|---|
-| `elecX`, `elecY`, `elecZ` | `Electric_field_x/y/z`, `EF_x/y/z` | Direção do campo (vetor, não precisa ser unitário) |
-| `elecA` | `dielectric_anisotropy`, `Aniso_E` | Anisotropia dielétrica (acoplamento quadrático) |
-| `elecP` | `dipolar_coupling`, `Polar_E` | Acoplamento dipolar (linear, polar) |
-| `Ei`, `Ef`, `dE` | `initial_E`, `final_E`, `E_variation` | Intensidade inicial, final e passo do campo (modo `electric`) |
-
-> **`Nk` (neighbour_kind) deve ser sempre `1`.** Vizinhos de segunda ou terceira ordem não são suportados nesta versão — qualquer outro valor faz o programa abortar com uma mensagem de erro explicando o motivo.
+| `elecX`, `elecY`, `elecZ` | `Electric_field_x/y/z`, `EF_x/y/z` | Field direction (any length; normalized by the program) |
+| `elecA` | `dielectric_anisotropy`, `Aniso_E` | Dielectric anisotropy (quadratic coupling) |
+| `elecP` | `dipolar_coupling`, `Polar_E` | Dipolar coupling (linear, polar) |
+| `Ei`, `Ef`, `dE` | `initial_E`, `final_E`, `E_variation` | Initial and final field magnitude and step (`electric` mode) |
 
 ---
 
-## Geometrias
+## Geometries
 
-**`bulk`** — Rede cúbica sem superfícies; todas as moléculas estão no interior.
+Every lattice site has a point type `pt`: `0` empty (outside the sample), `1` bulk, `n ≥ 2` a site of surface
+`n − 2`, whose anchoring is set by `anchoring_type n−2`. Surface sites also have an outward normal.
 
-**`slab`** — Rede com duas superfícies planas (faces inferior e superior em Z). Simula um filme confinado entre dois substratos.
+**`bulk`** — no surfaces; boundaries along x, y and z from the input.
 
-**`sphere`** — Confinamento esférico inscrito na caixa cúbica. Pontos fora do raio da esfera são marcados como inativos (`pt = 0`).
+**`slab`** — two flat surfaces: surface 0 at `z = 0` (normal −z) and surface 1 at `z = Nz − 1` (normal +z). A film
+confined between two substrates; z is free, x and y follow the input.
 
-**`custom`** — Geometria definida por um arquivo CSV externo:
+**`sphere`** — droplet centred at `(Nx/2, Ny/2, Nz/2)`: bulk for `r < Nz/2 − 1`, one layer of surface sites
+(surface 0, radial normals) for `r < Nz/2 + 1`, empty outside. All boundaries are free.
+
+**`custom`** — geometry read from a CSV file:
 
 ```
-boundary_file  minha_geometria.csv
+geometry       custom
+boundary_file  my_geometry.csv
 ```
 
-O arquivo deve conter colunas `x`, `y`, `z` e `pt`, onde `pt = 0` é sítio desativado, `pt = 1` é interior e `pt ≥ 2` identifica diferentes superfícies.
+The file has a header line naming the columns and one line per grid point. The columns `x`, `y`, `z` (integer grid
+indices), `nx`, `ny`, `nz` (outward unit normal, used on surface points) and `pt` are required, in any order; other
+columns are ignored. Points that are not listed are bulk. Errors (missing columns, indices outside the grid,
+repeated points, zero normals on surface points) are reported with the line number.
 
 ---
 
-## Modos de Evolução
+## Evolution modes
 
-| Modo | Comportamento |
+| Mode | Behaviour |
 |---|---|
-| `thermal` | Varre a temperatura de `Ti` até `Tf` em passos de `dT`. Em cada temperatura: `MCT` passos de termalização + `MCS` passos de medição. Gera um `director_field_<T*100>.csv` por temperatura. |
-| `step` | Executa `fn` blocos independentes de relaxação a temperatura fixa (`Ti`). Útil para estatística/estudo de convergência. |
-| `quench` | Como `step`, mas cada bloco aplica dois estágios: `MCT` passos em `Ti` seguidos de passos em `Tf`, simulando um resfriamento brusco. |
-| `electric` | Varre a intensidade do campo elétrico de `Ei` até `Ef` em passos de `dE`, a `Ti` fixa. |
+| `thermal` | Sweeps the temperature from `Ti` to `Tf` in steps of `dT`. At each temperature: `MCT` thermalization sweeps, then `MCS` measurement sweeps; one line of `po.dat` and one snapshot per temperature. Each temperature starts from the final state of the previous one. |
+| `step` | Evolution at the fixed temperature `Ti` in `fn` blocks of `MCT` + `MCS` sweeps; one line of `po.dat` and one snapshot per block. Useful to follow the relaxation and to check convergence. |
+| `quench` | `fn` blocks, each with `MCT` sweeps at `Ti`, a jump to `Tf`, `MCQ` sweeps at `Tf` and then `MCS` measurement sweeps. `dT` is not used. |
+| `electric` | Sweeps the field magnitude from `Ei` to `Ef` in steps of `dE` at the fixed temperature `Ti`. |
 
-Qualquer um dos quatro modos aceita o sufixo `GPU` (ex. `thermalGPU`) para rodar no dispositivo CUDA, caso o binário tenha sido compilado com `make` (não `make CPU`).
+Each of the four modes accepts the `GPU` suffix (e.g. `thermalGPU`) to run on a CUDA device, if the program was
+built with `make` (not `make CPU`).
 
----
-
-## Potenciais
-
-**Lebwohl–Lasher (`ll`)** — potencial clássico de pares nemáticos, `U_ij = -1.5·A·(n_i·n_j)²`.
-
-**Gruhn–Hess / GHRL (`ghrl`)** — potencial elástico contínuo discretizado na rede, baseado nas constantes de Frank (`k11`, `k22`, `k33`). Permite anisotropia elástica real e materiais colestéricos via `p0`.
-
-**Pear (`pear`)** — moléculas em forma de pera com flexoeletricidade de splay (Dhakal & Selinger, PRE 81, 031704, Eq. 6):
-`U_ij = -A(n_i·n_j)² - B1(n_i·n_j) - C((1+n_i·n_j)/2)² r̂_ij·(n_j−n_i)`.
-Com esse potencial, o `po.dat` ganha as colunas `P` (Eq. 8: `|⟨d·n_i⟩|`, com `d` o diretor), `dtheta` (módulo do vetor de splay da Eq. 3) e `divn` (splay com sinal), além de `Pr_sph`/`Pr_cyl` conforme a entrada `radial` — veja [`po.dat`](#podat). Com `pear` (ou com `elecP ≠ 0`), cada passo de Monte Carlo inclui automaticamente, além da rotação pequena, uma tentativa de inversão `n → -n` (Metropolis). Sem ela a transição nemático→polar (Fig. 2a do artigo) fica congelada: inverter uma molécula por rotações pequenas exige passar pela orientação perpendicular, com barreira ≈ 6A. O termo `-A(n_i·n_j)²` é invariante na inversão, então a aceitação depende só de `B1`, `C` e `elecP`.
-Para reproduzir o artigo use `xbound free`, `ybound free`, `zbound periodic`: com contorno periódico na direção do splay, um splay uniforme não é possível e `dtheta` tende a zero.
+Sweep points are computed as `Ti + n·dT` (or `Ei + n·dE`), and the last point is exactly `Tf` (`Ef`) when `Tf` lies
+on that grid, so rounding never skips the last temperature.
 
 ---
 
-## Condições de Contorno
+## Potentials
 
-| Valor | Descrição |
+**Lebwohl–Lasher (`ll`)** — the classic nematic pair potential, `U_ij = −1.5·A·(n_i·n_j)²`, i.e. `−A·P2(n_i·n_j)`
+up to a constant. With `A = 1` the nematic–isotropic transition of the bulk is at `T_NI ≈ 1.1232`.
+
+**Gruhn–Hess / Romano (`ghrl`)** — pair potential whose continuum limit has the Frank elastic constants `k11`,
+`k22`, `k33` and, with `p0 ≠ 0`, a cholesteric pitch. It allows real elastic anisotropy (e.g. E7:
+`k11 1.48`, `k22 1`, `k33 2.28`). Its coefficients are scaled so that the temperature unit is the same as in the LL
+model. On the lattice, the twist between neighbouring layers is `arcsin(2π/p0)`, so the pitch of the relaxed helix is
+`2π/arcsin(2π/p0)` (e.g. `p0 = 10` gives 9.25).
+
+**Pear (`pear`)** — pear-shaped molecules with splay flexoelectricity (Dhakal & Selinger, PRE 81, 031704, 2010,
+Eq. 6):
+`U_ij = −A(n_i·n_j)² − B1(n_i·n_j) − C((1+n_i·n_j)/2)² r̂_ij·(n_j−n_i)`, with `r̂_ij` pointing from i to j.
+Here `n` is a polar vector. With this potential `po.dat` gets the columns `P` (Eq. 8: `|⟨d·n_i⟩|`, with `d` the
+director), `dtheta` (magnitude of the splay vector of Eq. 3) and `divn` (signed splay), plus `Pr_sph`/`Pr_cyl`
+according to `radial` (see [`po.dat`](#podat)).
+
+With `pear` (or with `elecP ≠ 0`) each Monte Carlo step automatically includes, besides the small rotation, a
+Metropolis trial of the inversion `n → −n`. Without it the nematic→polar transition (Fig. 2a of the paper) is
+frozen: inverting a molecule by small rotations requires passing through the perpendicular orientation, with a
+barrier ≈ 6A. The term `−A(n_i·n_j)²` is invariant under the inversion, so its acceptance depends only on `B1`,
+`C` and `elecP`. The flips are not counted in the acceptance rate used to adapt the rotation amplitude.
+
+To reproduce the paper, use `xbound free`, `ybound free`, `zbound periodic`: with periodic boundaries along the
+splay direction a uniform splay is not possible and `dtheta` tends to zero.
+
+---
+
+## Boundary conditions
+
+| Value | Description |
 |---|---|
-| `free` | Sítios fora da borda são ignorados no cálculo de energia |
-| `periodic` | A rede se repete, simulando um sistema infinito |
+| `free` | No neighbours beyond the edge of the lattice |
+| `periodic` | The lattice repeats along that axis |
 
-Cada eixo pode ter condição independente.
+Each axis has its own condition. **A periodic axis needs an even number of sites**: the lattice is updated in 8
+sublattices by the parity of `(i, j, k)`, and with an odd size the first and last sites, which are neighbours across
+the periodic boundary, would have the same parity and be updated at the same time. The program stops with an error
+in that case. The `sphere` geometry makes all axes free, and `slab` makes z free.
 
 ---
 
-## Ancoragem de Superfície
+## Surface anchoring
 
-Define como as moléculas próximas a uma superfície se alinham. Cada superfície recebe um índice `n`.
+Sets how the directors at a surface align. Each surface has a number `n`, and its anchoring energy is added once
+to the energy of each of its sites (`s` is the outward normal of the site):
 
-Exemplo — slab com ancoragem homeotrópica nas duas faces:
+| Type | Energy | Easy axis |
+|---|---|---|
+| `homeotropic` | `−W (n·s)²` | local normal |
+| `rp` | `−W (n·e)²` | fixed lab axis `e(theta_s, phi_s)` |
+| `rp_tangent` | `−W (n·e)²` | lab axis projected on the local tangent plane (below) |
+| `fg` | `+W (n·s)²` | any direction in the tangent plane (degenerate planar) |
+| `homeotropic_ghrl`, `rp_ghrl`, `fg_ghrl` | `W·U_GHRL(n, e, s)` | the surface acts as a phantom GHRL neighbour along `s` with director `e` = normal, lab axis, or projection of `n` on the tangent plane |
+
+Example — slab with homeotropic anchoring on both faces:
 
 ```
 anchoring_type  0  homeotropic
@@ -282,26 +338,29 @@ anchoring_type  1  homeotropic
 W               1  0.5
 ```
 
-Exemplo — ancoragem planar oblíqua:
+Example — tilted easy axis on surface 0:
 
 ```
-anchoring_type  0  fg
+anchoring_type  0  rp
 W               0  0.3
+theta_s         0  60.0
 phi_s           0  45.0
-theta_s         0  90.0
 ```
 
-### `rp_tangent` — Rapini–Papoular planar em superfícies curvas
+### `rp_tangent` — planar Rapini–Papoular on curved surfaces
 
-O `rp` usa um eixo fácil fixo no referencial do laboratório, o que só faz sentido em superfícies planas. O `rp_tangent` projeta a direção de referência `d(theta_s, phi_s)` (mesma convenção de ângulos do `rp`) no plano tangente local de cada sítio:
+`rp` uses an easy axis fixed in the lab frame, which only makes sense on flat surfaces. `rp_tangent` projects the
+reference direction `d(theta_s, phi_s)` (same angle convention as `rp`) on the local tangent plane of each site:
 
 ```
 e = (d − (d·s) s) / |d − (d·s) s|        U = −W (n·e)²
 ```
 
-- Em superfície plana com `d` no plano (ex. `theta_s 90`), é idêntico ao `rp`, e as duas faces de um slab concordam.
-- Na esfera, `d = ẑ` (`theta_s 0`) dá eixo fácil ao longo dos meridianos (textura bipolar, polos em ±z).
-- Onde a normal é paralela a `d` a projeção se anula (inevitável em superfície fechada — teorema da bola cabeluda); nesses poucos sítios a energia de ancoramento é zero. A versão GPU informa quantos sítios estão nessa condição.
+- On a flat surface with `d` in the plane (e.g. `theta_s 90`) it is identical to `rp`, and the two faces of a slab
+  agree.
+- On a sphere, `d = ẑ` (`theta_s 0`) gives an easy axis along the meridians (bipolar texture, poles at ±z).
+- Where the normal is parallel to `d` the projection vanishes (unavoidable on a closed surface, by the hairy-ball
+  theorem); at these few sites the anchoring energy is zero. The GPU version reports how many sites are affected.
 
 ```
 geometry        sphere
@@ -313,20 +372,24 @@ phi_s           0  0
 
 ---
 
-## Campo Elétrico
+## Electric field
 
-Aplicado como contribuição adicional à energia de cada sítio:
+The field adds a term to the energy of each site:
 
 ```
-U_elec = -elecP · (n·E)  -  elecA · (n·E)²,     E = elecE · (elecX, elecY, elecZ)
+U_field = −elecP · (n·E)  −  elecA · (n·E)²,     E = elecE · (elecX, elecY, elecZ)
 ```
 
-- **`elecA` — quadrático (dielétrico):** invariante sob `n → -n`; alinha o diretor com o campo sem distinguir sentido. É o acoplamento usual para nemáticos.
-- **`elecP` — linear (dipolar):** distingue `n` de `-n` e induz ordem polar. É o termo `-E·n_i` do potencial `pear` (Dhakal & Selinger, Eq. 6): o `E` do artigo corresponde a `elecP · elecE`.
+- **`elecA` — quadratic (dielectric):** invariant under `n → −n`; aligns the director with the field without
+  choosing a sense. This is the usual coupling for nematics.
+- **`elecP` — linear (dipolar):** distinguishes `n` from `−n` and induces polar order. It is the `−E·n_i` term of
+  the pear potential (Dhakal & Selinger, Eq. 6): the paper's `E` is `elecP · elecE`.
 
-Os dois podem ser usados juntos; o termo é calculado se qualquer um deles for diferente de zero. A direção `(elecX, elecY, elecZ)` **não é normalizada** pelo programa — use um vetor unitário. A intensidade `elecE` vale 1 por padrão e é varrida de `Ei` a `Ef` (passo `dE`) no modo `evol electric`.
+Both can be used together; the term is computed when either is nonzero. The direction `(elecX, elecY, elecZ)` is
+normalized by the program (a zero direction with a nonzero coupling is an error). The magnitude `elecE` is 1, except
+in the `electric` mode, where it is swept from `Ei` to `Ef` in steps of `dE`.
 
-Exemplo (Fig. 2d do artigo, `E = 0.06` ao longo de z):
+Example (Fig. 2d of the paper, `E = 0.06` along z):
 
 ```
 potential  pear
@@ -336,9 +399,12 @@ elecP      0.06
 
 ---
 
-## Saídas
+## Output
 
-Toda simulação **limpa automaticamente** as saídas de execuções anteriores (`ic.csv`, `po.dat`, `director_field_*.csv`) antes de começar — não há risco de resultados antigos se misturarem com os novos.
+Each run **removes the output of a previous run** in the same folder (`ic.csv`, `po.dat`, `director_field_*.csv`)
+before starting, so old and new results are never mixed. This happens only after the whole setup has succeeded (an
+input error leaves the old files untouched), and after the initial condition has been read, so a snapshot of the
+previous run can be used as `ic_file`.
 
 ### `po.dat`
 
@@ -347,37 +413,50 @@ T       S        varS      E        varE
 0.80    0.712    0.00031   -1.234   0.00018
 ```
 
-`T` (ou intensidade de campo/índice, conforme o modo) · `S` parâmetro de ordem global · `varS`/`varE` variâncias · `E` energia média por sítio válido.
+The first column is the temperature (`T`), the field magnitude (`field`, in the `electric` mode) or the block number
+(`ii`, in the `step` and `quench` modes). `S` is the global order parameter (largest eigenvalue of the Q tensor),
+`E` the mean energy per non-empty site, and `varS`, `varE` their variances over the `MCS` samples. In `E`, the energy
+of a site includes its bonds with its neighbours, its anchoring and the field, so each bond is counted twice while
+anchoring and field are counted once.
 
-Colunas extras são acrescentadas nesta ordem, conforme o potencial e a entrada `radial`:
+Extra columns are appended in this order, depending on the potential and on `radial`:
 
 ```
 T S varS E varE  [P dtheta divn]  [Sr_sph Pr_sph]  [Sr_cyl Pr_cyl]
-                  só com pear      radial sphere    radial cylinder
-                                   ou both          ou both
+                  pear only        radial sphere    radial cylinder
+                                   or both          or both
 ```
 
-As colunas `Pr_*` só aparecem com `pear`; as `Sr_*` aparecem com qualquer potencial. Exemplos: `ll` numa esfera → `T S varS E varE Sr_sph`; `pear` numa esfera → `... P dtheta divn Sr_sph Pr_sph`; `pear` em bulk sem `radial` → `... P dtheta divn`. Todas são médias temporais sobre os `MCS` passos de medida.
+The `Pr_*` columns only appear with `pear`; the `Sr_*` columns appear with any potential. Examples: `ll` in a
+sphere → `T S varS E varE Sr_sph`; `pear` in a sphere → `... P dtheta divn Sr_sph Pr_sph`; `pear` in bulk without
+`radial` → `... P dtheta divn`. All are time averages over the `MCS` measurement sweeps.
 
-| Coluna | O que mede | Quando usar |
+| Column | What it measures | When to use it |
 |---|---|---|
-| `P` | Polarização global `\|⟨d·n_i⟩\|` (Eq. 8 do artigo), com `d` o diretor global (autovetor de Q). Vai de 0 a 1. | Polarização **uniforme** (bulk, slab, célula HAN). |
-| `dtheta` | Módulo do vetor de splay médio ⟨Δθ⟩ (Eq. 3). Média **vetorial**, então splays em direções opostas se cancelam. | Splay **uniforme**, como no artigo. |
-| `divn` | Splay médio com sinal `⟨∇·n⟩`, em unidades de 1/(espaçamento da rede). Diferença central no interior, unilateral na superfície. Referência: ouriço para fora numa esfera de raio R dá ≈ +3/R, para dentro ≈ −3/R. Em caixa totalmente periódica é exatamente 0. Não depende de centro. | Qualquer geometria; mostra o sinal do splay. |
-| `Sr_sph` | Ordem radial nemática `⟨(3c²−1)/2⟩`, `c = n_i·r̂_i`, com `r̂` a direção a partir do centro da grade `(Nx/2, Ny/2, Nz/2)`, o mesmo centro da geometria `sphere`. Não depende do sinal de n: 1 = radial, 0 = sem relação com a direção radial, −1/2 = tangencial. | Comparar a **estrutura** entre `ll` e `pear` em gotas e cascas esféricas. |
-| `Pr_sph` | Polarização radial `⟨n_i·r̂_i⟩`, mesmo `r̂`. **Com sinal**: +1 = ouriço polar para fora, −1 = para dentro, ≈0 = sem ordem polar radial. | Dizer se a estrutura radial é **polar** (só `pear`). |
-| `Sr_cyl`, `Pr_cyl` | Iguais aos anteriores, mas com `r̂` no plano xy, a partir do eixo z que passa pelo centro da grade (componente z ignorada). | Cilindros e cascas cilíndricas com eixo em z. |
+| `P` | Global polarization `\|⟨d·n_i⟩\|` (Eq. 8 of the paper), with `d` the global director (eigenvector of Q). From 0 to 1. | **Uniform** polarization (bulk, slab, HAN cell). |
+| `dtheta` | Magnitude of the mean splay vector ⟨Δθ⟩ (Eq. 3). A **vector** average, so splays in opposite directions cancel. | **Uniform** splay, as in the paper. |
+| `divn` | Signed mean splay `⟨∇·n⟩`, in units of 1/(lattice spacing). Central difference in the interior, one-sided at surfaces. Reference: an outward hedgehog in a sphere of radius R gives ≈ +3/R, an inward one ≈ −3/R. Exactly 0 in a fully periodic box. Does not depend on a centre. | Any geometry; shows the sign of the splay. |
+| `Sr_sph` | Radial nematic order `⟨(3c²−1)/2⟩`, `c = n_i·r̂_i`, with `r̂` the direction from the grid centre `(Nx/2, Ny/2, Nz/2)`, the same centre as the `sphere` geometry. Independent of the sign of n: 1 = radial, 0 = unrelated to the radial direction, −1/2 = tangential. | Compare the **structure** of `ll` and `pear` in droplets and spherical shells. |
+| `Pr_sph` | Radial polarization `⟨n_i·r̂_i⟩`, same `r̂`. **Signed**: +1 = outward polar hedgehog, −1 = inward, ≈0 = no radial polar order. | Tell whether the radial structure is **polar** (`pear` only). |
+| `Sr_cyl`, `Pr_cyl` | Same as above, with `r̂` in the xy plane from the z axis through the grid centre (z component ignored). | Cylinders and cylindrical shells along z. |
 
-Sobre a comparação `ll` × `pear`: no `ll`, n e −n são o mesmo estado, então polarização e splay com sinal não fazem sentido. Por isso `P`, `dtheta`, `divn` e `Pr_*` só existem no `pear`, enquanto `Sr_*` serve para os dois. `Sr` responde "a estrutura é radial?"; `Pr` responde "além de radial, é polar?".
+On comparing `ll` and `pear`: in `ll`, n and −n are the same state, so polarization and signed splay are
+meaningless there. That is why `P`, `dtheta`, `divn` and `Pr_*` exist only for `pear`, while `Sr_*` serves both.
+`Sr` answers "is the structure radial?"; `Pr` answers "besides radial, is it polar?".
 
-`P` e `dtheta` **não enxergam** configurações radiais: num ouriço polar perfeito os dois dão ≈0, porque as projeções e os vetores de splay se cancelam ao redor do centro.
+`P` and `dtheta` **do not see** radial configurations: in a perfect polar hedgehog both give ≈0, because the
+projections and the splay vectors cancel around the centre.
 
-As grandezas radiais só têm sentido quando a região simulada está centrada na grade (para `custom`, gere o arquivo de fronteira centrado). Usar a versão errada subestima a ordem: um campo radial cilíndrico perfeito dá `Sr_cyl=1`, `Pr_cyl=1`, mas `Sr_sph=0.50`, `Pr_sph=0.79`.
+The radial quantities only make sense when the simulated region is centred on the grid (for `custom`, generate a
+centred geometry file). Using the wrong one underestimates the order: a perfect cylindrical radial field gives
+`Sr_cyl = 1`, `Pr_cyl = 1`, but `Sr_sph = 0.50`, `Pr_sph = 0.79`.
 
-Valores de referência (esfera 21³, R≈10, `pear`): ouriço para fora → `Sr_sph=1`, `Pr_sph=1`, `divn=0.275`; para dentro → `Pr_sph=−0.99`, `divn=−0.275`; uniforme ao longo de z → `Sr_sph≈0`, `Pr_sph≈0`, `Sr_cyl=−0.5`.
+Reference values (sphere 21³, R ≈ 10, `pear`): outward hedgehog → `Sr_sph = 1`, `Pr_sph = 1`, `divn = 0.275`;
+inward → `Pr_sph = −0.99`, `divn = −0.275`; uniform along z → `Sr_sph ≈ 0`, `Pr_sph ≈ 0`, `Sr_cyl = −0.5`.
 
 ### `ic.csv`
-Snapshot da condição inicial, antes do início da evolução.
+
+Snapshot of the initial condition, before the evolution starts (same format as the snapshots below).
 
 ### `director_field_<id>.csv`
 
@@ -386,57 +465,72 @@ x,y,z,nx,ny,nz,S,pt
 0,0,0,0.123,-0.456,0.781,0.712,1
 ```
 
-`(x,y,z)` coordenadas · `(nx,ny,nz)` componentes do diretor · `S` parâmetro de ordem local · `pt` tipo do ponto (`1` interior, `≥2` superfície, `0` inativo).
+`(x,y,z)` grid indices · `(nx,ny,nz)` director · `S` local order parameter (largest eigenvalue of Q averaged over the
+site and its non-empty neighbours) · `pt` point type (`1` bulk, `≥2` surface, `0` empty).
 
-> Em pontos com `pt = 0` (fora da geometria simulada), `S` é reportado como `NaN` — não há material ali, então não existe parâmetro de ordem a calcular. Ferramentas como pandas, Excel e Origin reconhecem `NaN` automaticamente e o excluem de gráficos e estatísticas.
+The name is `director_field_<int(100·x)>.csv`, with `x` the temperature (`thermal`) or the field (`electric`), e.g.
+`director_field_50.csv` for `T = 0.5`. For steps finer than 0.01 the factor becomes 1000, 10000, ..., so that
+consecutive points never share a name. In the `step` and `quench` modes `<id>` is the block number.
+
+> At points with `pt = 0` (outside the sample) `S` is written as `NaN`: there is no material there. Tools such as
+> pandas, Excel and Origin recognize `NaN` and leave it out of plots and statistics.
 
 ---
 
-## Estrutura do Projeto
+## Project layout
 
 ```
-McLics-backend/
-├── include/                       # Cabeçalhos
-│   ├── parameters.h               # Struct com todos os parâmetros de simulação
-│   ├── evolve.h / evolve.cuh      # Classes de evolução — CPU e GPU
-│   ├── geometry.h / geometry.cuh  # Classes de geometria
+mclics/
+├── include/
+│   ├── parameters.h               # All simulation parameters and their defaults
+│   ├── define.h                   # Lattice layout (indices, point types, local environment of a site)
+│   ├── evolve.h / evolve.cuh      # Evolution modes: CPU and GPU classes
+│   ├── geometry.h                 # Geometry classes and the site energy
 │   ├── potential.h / potential.cuh
-│   ├── anchoring.h                # Tipos de ancoragem de superfície
-│   ├── io.h                       # Leitura de parâmetros e escrita de saída
+│   ├── anchoring.h                # Anchoring types
+│   ├── sweep.h                    # Temperature/field sweep points and snapshot names
+│   ├── io.h                       # Input reading and validation, output
 │   ├── ic.h / simulator.h
-│   └── parameter_order.h          # Cálculo do tensor de ordem Q
+│   ├── parameter_order.h          # Q tensor and the extra po.dat columns
+│   └── reduce.cuh / stringGPU.cuh # GPU helpers
 │
 ├── src/
-│   ├── main.cpp                   # Ponto de entrada, banner, limpeza de saídas antigas
-│   ├── io.cpp                     # Parser do arquivo de parâmetros
-│   ├── simulator.cpp / simulatorGPU.cpp
-│   │
-│   ├── evolve_thermal.cpp/.cu     # Varredura de temperatura
-│   ├── evolve_step.cpp/.cu        # Blocos independentes a T fixa
-│   ├── evolve_quench.cpp/.cu      # Resfriamento brusco
-│   ├── evolve_electric.cpp/.cu    # Varredura de campo elétrico
-│   │
-│   ├── geometry_bulk.cpp
-│   ├── geometry_slab.cpp
-│   ├── geometry_sphere.cpp
-│   ├── geometry_custom.cpp
-│   │
-│   ├── potential.cpp/.cu          # Potenciais LL, GHRL e Pear
-│   ├── anchoring_*.cpp            # homeotropic, fg, rp, strong
-│   ├── parameter_order.cpp        # Diagonalização do tensor Q (parâmetro de ordem)
-│   └── ic.cpp                     # Geração de condição inicial
+│   ├── main.cpp                   # Entry point, banner, removal of old output
+│   ├── io.cpp                     # Input reading and validation, GHRL coefficients, snapshots
+│   ├── simulator.cpp              # Builds the simulation from the parameters
+│   ├── evolve.cpp / evolve.cu     # Monte Carlo sweep and energy (CPU / GPU)
+│   ├── evolve_thermal.cpp/.cu     # Temperature sweep
+│   ├── evolve_step.cpp/.cu        # Blocks at fixed temperature
+│   ├── evolve_quench.cpp/.cu      # Quench
+│   ├── evolve_electric.cpp/.cu    # Field sweep
+│   ├── geometry*.cpp, geometry.cu # bulk, slab, sphere, custom
+│   ├── potential.cpp/.cu          # LL, GHRL and pear potentials, field coupling
+│   ├── anchoring*.cpp             # homeotropic, rp, rp_tangent, fg (and the _ghrl variants)
+│   ├── parameter_order.cpp        # Order parameters (Q tensor diagonalization)
+│   ├── ic.cpp                     # Initial conditions
+│   └── reduce.cu, stringGPU.cu    # GPU sums and string comparison
 │
+├── analyze.py                     # Plots of po.dat
+├── average_replicas.py            # Average of po.dat over runs with different seeds
+├── artigo/                        # Scripts for the test problems and figures of the paper
 └── Makefile
 ```
 
 ---
 
-## Observações
+## Notes
 
-- O simulador utiliza apenas vizinhos mais próximos (**`Nk = 1`**); vizinhos de segunda ou terceira ordem não são suportados, e o programa aborta com mensagem de erro caso `Nk` diferente de `1` seja especificado.
-- A escolha entre CPU e GPU é feita pelo **sufixo do parâmetro `evol`** (ex. `thermal` vs. `thermalGPU`), não por flag de linha de comando — o binário gerado por `make` roda os dois; o gerado por `make CPU` só reconhece os modos sem sufixo `GPU`.
-- Em CPU, o OpenMP utiliza todos os núcleos disponíveis, com particionamento estático do trabalho entre threads — o que garante que a mesma simulação, rodada duas vezes na mesma máquina, produza resultados estatisticamente equivalentes.
-- O parâmetro de ordem `S` é calculado via diagonalização do tensor de ordem Q de Landau–de Gennes (GSL `gsl_eigen_symmv`).
+- Only nearest neighbours are used (**`Nk = 1`**); any other value stops the program with an error message.
+- The choice between CPU and GPU is made by the **suffix of `evol`** (e.g. `thermal` vs. `thermalGPU`), not by a
+  command-line option. The program built by `make` runs both; the one built by `make CPU` only accepts the modes
+  without the `GPU` suffix.
+- On the CPU, OpenMP uses all available cores, with one random number generator per thread. Which thread updates
+  which site depends on the number of threads, so the trajectory of a run changes with `OMP_NUM_THREADS` (its
+  averages do not). For bit-identical CPU runs, fix `OMP_NUM_THREADS`. On the GPU, a run is reproducible for a given
+  `seed`.
+- The rotation amplitude of the trial moves is adapted after every sweep to keep the acceptance near 50%, also
+  during the measurement sweeps.
+- The order parameter `S` is the largest eigenvalue of the Landau–de Gennes Q tensor (GSL `gsl_eigen_symmv`).
 
 ---
 

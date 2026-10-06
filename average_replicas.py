@@ -3,32 +3,30 @@
 # Copyright (C) 2026 The McLics authors (see AUTHORS)
 # SPDX-License-Identifier: GPL-3.0-or-later
 """
-average_replicas.py — Combina réplicas independentes de po.dat
-================================================================
-Para sistemas com paisagem de energia degenerada (ex.: gota nemática com
-ancoramento homeotrópico numa esfera), uma única rodada de Monte Carlo pode
-"congelar" em qualquer uma de várias texturas de defeito com energia local
-parecida, mas parâmetro de ordem global S bem diferente. Uma rodada isolada
-não é uma boa estimativa do comportamento típico do sistema.
+average_replicas.py — combine independent replicas of po.dat
+=============================================================
+In systems with a degenerate energy landscape (e.g. a nematic droplet with homeotropic anchoring), a single Monte
+Carlo run can freeze into any of several defect textures with similar energies but quite different global order
+parameters S. A single run is then a poor estimate of the typical behaviour of the system.
 
-Este script combina N réplicas independentes (mesmo input_parameters.txt,
-apenas `seed` diferente) em uma única curva com estatística correta.
+This script combines N independent replicas (same input file, different `seed`) into one curve with the correct
+statistics.
 
-Uso:
+Usage:
     python3 average_replicas.py run_seed1/po.dat run_seed2/po.dat ... -o po_avg.dat
     python3 average_replicas.py replicas/seed*/po.dat -o po_avg.dat --txt
 
-Como gerar as réplicas:
-    Copie input_parameters.txt para N pastas, mudando só a linha `seed`
-    (1, 2, 3, ...), rode mclics em cada uma, depois combine os po.dat aqui.
+Making the replicas:
+    copy the input file to N folders, changing only the `seed` line (1, 2, 3, ...), run mclics in each of them,
+    then combine their po.dat files here.
 
-Estatística:
-    Para cada T, combina as réplicas usando a lei da variância total:
-        S_médio      = média(S_r)                       sobre as réplicas r
-        Var(S) total = média(varS_r)  +  var(S_r)
-                       [variância "dentro" de cada réplica] + [variância "entre" réplicas]
-    O segundo termo é o que se perde ao olhar só para uma rodada — é
-    exatamente a variabilidade de "qual textura de defeito se formou".
+Statistics:
+    At each T, the replicas are combined with the law of total variance:
+        S_mean      = mean(S_r)                       over the replicas r
+        Var(S) total = mean(varS_r)  +  var(S_r)
+                       [variance within each replica] + [variance between replicas]
+    The second term is what is lost when looking at a single run: it is the variability of "which defect texture
+    formed". The extra columns (P, dtheta, radial order, ...) are plain means over the replicas.
 """
 
 import sys
@@ -53,7 +51,7 @@ def read_po_dat(path):
             except ValueError:
                 continue
     if not rows:
-        print(f"  [ERRO] Nenhum dado válido em {path}")
+        print(f"  [ERROR] No valid data in {path}")
         sys.exit(1)
     return header, rows
 
@@ -68,20 +66,20 @@ def combine(paths):
 
     ncols = len(per_file[0][0])
     if not all(len(r) == ncols for rows in per_file for r in rows):
-        print("  [ERRO] Réplicas com número de colunas diferente (ex.: uma usa potencial 'pear' e outra não).")
+        print("  [ERROR] The replicas have different numbers of columns (e.g. one uses the pear potential and another does not).")
         sys.exit(1)
 
     lengths = [len(rows) for rows in per_file]
     if len(set(lengths)) != 1:
-        print(f"  [AVISO] Réplicas com número de pontos T diferente: {lengths}")
-        print("  [AVISO] Usando apenas os primeiros min(N) pontos de cada réplica.")
+        print(f"  [WARNING] The replicas have different numbers of points: {lengths}")
+        print("  [WARNING] Using only the first min(N) points of each replica.")
     n_points = min(lengths)
 
     combined = []
     for i in range(n_points):
         T_vals = [rows[i][0] for rows in per_file]
         if max(T_vals) - min(T_vals) > 1e-3:
-            print(f"  [AVISO] Ponto {i}: temperaturas não batem entre réplicas ({T_vals}) — pulando.")
+            print(f"  [WARNING] Point {i}: the temperatures differ between replicas ({T_vals}); skipped.")
             continue
         T = np.mean(T_vals)
 
@@ -91,7 +89,7 @@ def combine(paths):
         varE_r = np.array([rows[i][4] for rows in per_file])
 
         S_mean = S_r.mean()
-        # Lei da variância total: Var[S] = E[Var(S|réplica)] + Var[E(S|réplica)]
+        # Law of total variance: Var[S] = E[Var(S|replica)] + Var[E(S|replica)]
         S_var_total = varS_r.mean() + S_r.var(ddof=0)
 
         E_mean = E_r.mean()
@@ -99,7 +97,7 @@ def combine(paths):
 
         row = [T, S_mean, S_var_total, E_mean, E_var_total]
 
-        # Extra columns (P, dtheta when potential = pear): plain mean over replicas.
+        # Extra columns (P, dtheta, radial order, ...): plain mean over the replicas.
         for c in range(5, ncols):
             row.append(np.mean([rows[i][c] for rows in per_file]))
 
@@ -110,18 +108,18 @@ def combine(paths):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Combina réplicas independentes de po.dat (mesmos parâmetros, seeds diferentes).",
+        description="Combines independent replicas of po.dat (same parameters, different seeds).",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    parser.add_argument("inputs", nargs="+", help="Arquivos po.dat de cada réplica")
-    parser.add_argument("-o", "--output", default="po_avg.dat", help="Arquivo de saída (padrão: po_avg.dat)")
-    parser.add_argument("--txt", action="store_true", help="Imprime a tabela combinada no terminal")
+    parser.add_argument("inputs", nargs="+", help="po.dat file of each replica")
+    parser.add_argument("-o", "--output", default="po_avg.dat", help="output file (default: po_avg.dat)")
+    parser.add_argument("--txt", action="store_true", help="print the combined table on the terminal")
     args = parser.parse_args()
 
     if len(args.inputs) < 2:
-        print("  [AVISO] Só uma réplica foi passada — sem réplicas independentes não há como estimar")
-        print("  a variabilidade entre texturas. O resultado será idêntico ao po.dat de entrada.")
+        print("  [WARNING] Only one replica given: without independent replicas the variability between")
+        print("  textures cannot be estimated. The result is identical to the input po.dat.")
 
     header, combined = combine(args.inputs)
 
@@ -130,8 +128,8 @@ def main():
         for row in combined:
             f.write(" ".join(f"{v:g}" for v in row) + "\n")
 
-    print(f"\n  {len(args.inputs)} réplicas combinadas -> {args.output}")
-    print(f"  {len(combined)} pontos de T\n")
+    print(f"\n  {len(args.inputs)} replicas combined -> {args.output}")
+    print(f"  {len(combined)} points\n")
 
     if args.txt:
         print(f"  {'T':>8} {'S':>10} {'varS':>12} {'E':>10} {'varE':>12}")

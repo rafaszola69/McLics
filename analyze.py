@@ -1,34 +1,28 @@
 # McLics - Monte Carlo Liquid Crystal Simulator
 # Copyright (C) 2026 The McLics authors (see AUTHORS)
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Como usar:
-# python3 -m venv venv
-# source venv/bin/activate
-
 """
-analyze.py — Script de análise dos resultados do McLics-backend
-================================================================
-Uso:
-    python3 -m venv venv                      # cria o ambiente virtual
-    source venv/bin/activate                  # ativa o ambiente virtual
-    python3 analyze.py                        # lê po.dat na pasta atual
-    python3 analyze.py resultados/po.dat      # lê arquivo específico
-    python3 analyze.py po.dat -o grafico.png  # salva em arquivo específico
-    python3 analyze.py po.dat --show          # exibe o gráfico interativo
-    python3 analyze.py po.dat --txt           # imprime tabela de estatísticas
-    python3 analyze.py po.dat --dark          # tema escuro (apresentações)
-    python3 analyze.py po.dat --mode electric # rótulo de eixo p/ simulação de campo elétrico
+analyze.py — plots the results of McLics (po.dat)
+=================================================
+Usage:
+    python3 analyze.py                        # reads po.dat in the current folder
+    python3 analyze.py results/po.dat         # reads a given file
+    python3 analyze.py po.dat -o plot.png     # saves to a given file
+    python3 analyze.py po.dat --show          # also shows the interactive plot
+    python3 analyze.py po.dat --txt           # prints a table of statistics
+    python3 analyze.py po.dat --dark          # dark theme (presentations)
+    python3 analyze.py po.dat --mode electric # sets the x-axis label explicitly
 
-Saída:
-    - Gráfico em três painéis empilhados (eixo único cada): S(x), E(x) e Var(S)
-    - Bandas de erro (±1 desvio padrão) e detecção automática da transição de fase
-    - Tabela de estatísticas no terminal (com --txt)
+Requires numpy, pandas and matplotlib (e.g. in a virtual environment:
+python3 -m venv venv && source venv/bin/activate && pip install numpy pandas matplotlib).
 
-Nota:
-    po.dat sempre grava o cabeçalho "T S varS E varE", independente do modo de
-    evolução (thermal/electric/step/quench) — o backend não distingue os
-    modos no arquivo. Por isso o modo não é autodetectável; use --mode para
-    rotular o eixo x corretamente (padrão: thermal).
+Output:
+    - Plot with three stacked panels: S(x), E(x) and Var(S)
+    - Error bands (±1 standard deviation) and an estimate of the phase transition
+    - Table of statistics on the terminal (with --txt)
+
+The evolution mode is detected from the first column of the po.dat header: T (thermal), field (electric) or ii
+(step or quench, labelled as step). --mode overrides it.
 """
 
 import sys
@@ -44,41 +38,39 @@ mpl.rcParams["font.family"] = "sans-serif"
 mpl.rcParams["axes.unicode_minus"] = False
 
 
-# ── Leitura do arquivo ────────────────────────────────────────────────────────
+# ── Reading the file ──────────────────────────────────────────────────────────
 
-# NOTA: o backend (evolve_thermal.cpp, evolve_electric.cpp, evolve_step.cpp,
-# evolve_quench.cpp) sempre grava o mesmo cabeçalho literal "T S varS E varE"
-# em po.dat, independente do modo de evolução real (params.evol). Ou seja,
-# o modo NÃO é detectável a partir do conteúdo do arquivo — precisa ser
-# informado explicitamente via --mode; caso contrário assume-se "thermal".
+# x-axis label and short name of each evolution mode
 MODE_INFO = {
-    "thermal":  ("Temperatura (T)", "T"),
-    "electric": ("Campo Elétrico (E)", "E"),
-    "step":     ("Passo (índice)", "step"),
-    "quench":   ("Passo de quench (índice)", "step"),
+    "thermal":  ("Temperature (T)", "T"),
+    "electric": ("Electric field (E)", "E"),
+    "step":     ("Block (index)", "block"),
+    "quench":   ("Quench block (index)", "block"),
 }
+# first column of the po.dat header -> mode
+HEADER_MODE = {"T": "thermal", "field": "electric", "ii": "step"}
 
 
 def read_po_dat(file_path, forced_mode=None):
     """
-    Lê po.dat e retorna um DataFrame com as colunas:
-      x, S, varS, E, varE
-    onde x é temperatura, campo elétrico ou índice de passo, conforme --mode.
+    Reads po.dat and returns a DataFrame with the columns x, S, varS, E, varE, where x is the temperature, the
+    field or the block number. The mode is forced_mode if given, otherwise detected from the header.
     """
     if not os.path.isfile(file_path):
-        print(f"  [ERRO] Arquivo não encontrado: {file_path}")
+        print(f"  [ERROR] File not found: {file_path}")
         sys.exit(1)
 
     rows = []
+    detected = None
 
     with open(file_path) as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
-            # Linha de cabeçalho ("T S varS E varE[...]") — não carrega
-            # informação de modo, apenas é ignorada.
+            # header line ("T S varS E varE ..."): its first column gives the mode
             if not line[0].replace('.', '').replace('-', '').isdigit():
+                detected = HEADER_MODE.get(line.split()[0], detected)
                 continue
             parts = line.split()
             if len(parts) < 5:
@@ -89,10 +81,10 @@ def read_po_dat(file_path, forced_mode=None):
                 continue
 
     if not rows:
-        print("  [ERRO] Nenhum dado válido encontrado em po.dat.")
+        print(f"  [ERROR] No valid data in {file_path}.")
         sys.exit(1)
 
-    mode = forced_mode or "thermal"
+    mode = forced_mode or detected or "thermal"
     xlabel, xcol = MODE_INFO[mode]
 
     df = pd.DataFrame(rows, columns=["x", "S", "varS", "E", "varE"])
@@ -105,49 +97,48 @@ def read_po_dat(file_path, forced_mode=None):
     return df, mode, xlabel, xcol
 
 
-# ── Detecção de transição de fase ────────────────────────────────────────────
+# ── Phase transition ──────────────────────────────────────────────────────────
 
 def find_transition(df):
     """
-    Estima a temperatura (ou campo) de transição de fase como o ponto de
-    maior variação absoluta de dS/dx. Retorna None se não for detectável.
+    Estimates the transition temperature (or field) as the point of largest |dS/dx|. Returns None if the change
+    is too small.
     """
     if len(df) < 4:
         return None
     dS = np.abs(np.gradient(df["S"].values, df["x"].values))
     idx = np.argmax(dS)
-    # Só reporta se a variação for significativa
+    # report it only if the change is significant
     if dS[idx] < 0.01:
         return None
     return df["x"].iloc[idx]
 
 
-# ── Estatísticas ──────────────────────────────────────────────────────────────
+# ── Statistics ────────────────────────────────────────────────────────────────
 
 def print_stats(df, xlabel):
-    """Imprime uma tabela de estatísticas descritivas no terminal."""
+    """Prints a table of descriptive statistics on the terminal."""
     sep = "─" * 52
     print(f"\n{sep}")
-    print(f"  Estatísticas  —  {len(df)} pontos")
+    print(f"  Statistics  —  {len(df)} points")
     print(sep)
     print(f"  {'':12s}  {'S':>10s}  {'E':>10s}")
-    print(f"  {'Mínimo':12s}  {df['S'].min():10.4f}  {df['E'].min():10.4f}")
-    print(f"  {'Máximo':12s}  {df['S'].max():10.4f}  {df['E'].max():10.4f}")
-    print(f"  {'Média':12s}  {df['S'].mean():10.4f}  {df['E'].mean():10.4f}")
-    print(f"  {'Desvio pad.':12s}  {df['S'].std():10.4f}  {df['E'].std():10.4f}")
+    print(f"  {'Minimum':12s}  {df['S'].min():10.4f}  {df['E'].min():10.4f}")
+    print(f"  {'Maximum':12s}  {df['S'].max():10.4f}  {df['E'].max():10.4f}")
+    print(f"  {'Mean':12s}  {df['S'].mean():10.4f}  {df['E'].mean():10.4f}")
+    print(f"  {'Std. dev.':12s}  {df['S'].std():10.4f}  {df['E'].std():10.4f}")
 
     Tx = find_transition(df)
     if Tx is not None:
-        print(f"\n  Transição de fase estimada em x ≈ {Tx:.4f}")
+        print(f"\n  Estimated phase transition at x ≈ {Tx:.4f}")
     print(sep + "\n")
 
 
-# ── Paleta ────────────────────────────────────────────────────────────────────
+# ── Palette ───────────────────────────────────────────────────────────────────
 
 def get_palette(dark=False):
     """
-    Paleta validada (seis-checks de acessibilidade/CVD) — mesmos tons,
-    ajustados de claro para escuro. slot1=azul (S), slot2=laranja (E).
+    Colour-blind safe palette, the same hues for the light and dark themes: blue for S, orange for E.
     """
     if dark:
         return dict(
@@ -162,10 +153,10 @@ def get_palette(dark=False):
     )
 
 
-# ── Gráfico ───────────────────────────────────────────────────────────────────
+# ── Plot ──────────────────────────────────────────────────────────────────────
 
 def _style_axis(ax, pal):
-    """Aplica grade hairline sólida e recessiva, sem cromo pesado."""
+    """Light solid grid, no top/right spines."""
     ax.set_facecolor(pal["surface"])
     ax.grid(True, linestyle="-", linewidth=0.8, alpha=1.0, color=pal["grid"], zorder=0)
     for spine in ("top", "right"):
@@ -177,7 +168,7 @@ def _style_axis(ax, pal):
 
 
 def plot(df, mode, xlabel, output_path, show, dark=False):
-    """Gera o gráfico de S(x), E(x) e Var(S), em painéis empilhados de eixo único."""
+    """Plots S(x), E(x) and Var(S) in stacked panels."""
 
     pal = get_palette(dark)
     x = df["x"].values
@@ -193,45 +184,44 @@ def plot(df, mode, xlabel, output_path, show, dark=False):
 
     Tx = find_transition(df)
 
-    # Com muitos pontos próximos, o anel do marcador quebra a linha
-    # visualmente (parece tracejada) — acima de ~30 pontos, mostra só a linha.
+    # With many close points the markers make the line look dashed: above 30 points, draw the line only.
     show_markers = n <= 30
     marker_kw = dict(marker="o", markersize=6, markeredgewidth=1.2,
                       markeredgecolor=pal["surface"]) if show_markers else dict(marker="")
 
-    # ── Painel 1: S(x) ───────────────────────────────────────────────────────
+    # ── Panel 1: S(x) ────────────────────────────────────────────────────────
     _style_axis(ax_s, pal)
     ax_s.plot(x, df["S"], color=pal["blue"], linewidth=2,
               markerfacecolor=pal["blue"], zorder=3, **marker_kw)
     if n > 1:
         ax_s.fill_between(x, df["S"] - df["errS"], df["S"] + df["errS"],
                            color=pal["blue"], alpha=0.12, linewidth=0, zorder=2)
-    ax_s.set_ylabel("Parâmetro de ordem  S", color=pal["ink2"], fontsize=11)
+    ax_s.set_ylabel("Order parameter  S", color=pal["ink2"], fontsize=11)
     ax_s.set_ylim(-0.05, 1.05)
     ax_s.annotate(f"{df['S'].iloc[-1]:.3f}",
                   (x[-1], df["S"].iloc[-1]), xytext=(6, 0),
                   textcoords="offset points", va="center", fontsize=9,
                   color=pal["ink2"])
-    ax_s.set_title("Resultados da Simulação de Monte Carlo — McLics",
+    ax_s.set_title("Monte Carlo simulation results — McLics",
                     fontsize=13.5, color=pal["ink"], pad=14, loc="left",
                     fontweight="semibold")
     plt.setp(ax_s.get_xticklabels(), visible=False)
 
-    # ── Painel 2: E(x) ───────────────────────────────────────────────────────
+    # ── Panel 2: E(x) ────────────────────────────────────────────────────────
     _style_axis(ax_e, pal)
     ax_e.plot(x, df["E"], color=pal["orange"], linewidth=2,
               markerfacecolor=pal["orange"], zorder=3, **marker_kw)
     if n > 1:
         ax_e.fill_between(x, df["E"] - df["errE"], df["E"] + df["errE"],
                            color=pal["orange"], alpha=0.14, linewidth=0, zorder=2)
-    ax_e.set_ylabel("Energia média  E", color=pal["ink2"], fontsize=11)
+    ax_e.set_ylabel("Mean energy  E", color=pal["ink2"], fontsize=11)
     ax_e.annotate(f"{df['E'].iloc[-1]:.3f}",
                   (x[-1], df["E"].iloc[-1]), xytext=(6, 0),
                   textcoords="offset points", va="center", fontsize=9,
                   color=pal["ink2"])
     plt.setp(ax_e.get_xticklabels(), visible=False)
 
-    # ── Painel 3: Var(S) ─────────────────────────────────────────────────────
+    # ── Panel 3: Var(S) ──────────────────────────────────────────────────────
     _style_axis(ax_var, pal)
     bar_w = (x[-1] - x[0]) / (n + 1) * 0.85 if n > 1 else 0.01
     ax_var.bar(x, df["varS"], width=bar_w, color=pal["blue"], alpha=0.55,
@@ -241,12 +231,12 @@ def plot(df, mode, xlabel, output_path, show, dark=False):
     ax_var.xaxis.set_minor_locator(AutoMinorLocator())
     ax_var.xaxis.set_major_locator(MaxNLocator(nbins=10, prune=None))
 
-    # ── Linha de transição (anotação, não série) ────────────────────────────
+    # ── Transition line (annotation) ─────────────────────────────────────────
     if Tx is not None:
         for ax in (ax_s, ax_e, ax_var):
             ax.axvline(Tx, color=pal["ref"], linewidth=1.1,
                        linestyle=(0, (3, 3)), zorder=1)
-        ax_s.annotate(f"transição ≈ {Tx:.3f}", (Tx, 1.0),
+        ax_s.annotate(f"transition ≈ {Tx:.3f}", (Tx, 1.0),
                       xytext=(6, -4), textcoords="offset points",
                       fontsize=9, color=pal["ink2"], rotation=0, va="top")
 
@@ -257,7 +247,7 @@ def plot(df, mode, xlabel, output_path, show, dark=False):
 
     plt.savefig(output_path, dpi=300, bbox_inches="tight",
                 facecolor=fig.get_facecolor())
-    print(f"  Gráfico salvo em: {output_path}")
+    print(f"  Plot saved to: {output_path}")
 
     if show:
         plt.show()
@@ -269,35 +259,34 @@ def plot(df, mode, xlabel, output_path, show, dark=False):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Analisa e plota os resultados do McLics-backend (po.dat).",
+        description="Plots the results of McLics (po.dat).",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
     parser.add_argument(
         "input", nargs="?", default="po.dat",
-        help="Caminho para o arquivo po.dat (padrão: ./po.dat)"
+        help="po.dat file (default: ./po.dat)"
     )
     parser.add_argument(
         "-o", "--output", default=None,
-        help="Nome do arquivo de saída do gráfico (padrão: <input>.png)"
+        help="output image (default: mclics_<mode>_<date>_<time>.png)"
     )
     parser.add_argument(
         "--show", action="store_true",
-        help="Exibe o gráfico interativo além de salvar"
+        help="also show the interactive plot"
     )
     parser.add_argument(
         "--txt", action="store_true",
-        help="Imprime tabela de estatísticas no terminal"
+        help="print a table of statistics on the terminal"
     )
     parser.add_argument(
         "--dark", action="store_true",
-        help="Usa tema escuro no gráfico (bom para apresentações/slides)"
+        help="dark theme (for presentations)"
     )
     parser.add_argument(
         "--mode", choices=sorted(MODE_INFO.keys()), default=None,
-        help=("Modo de evolução da simulação (thermal | electric | step | quench). "
-              "Não é detectável a partir de po.dat — o cabeçalho é sempre o mesmo "
-              "independente do modo. Padrão: thermal.")
+        help=("evolution mode of the run (thermal | electric | step | quench), which sets the x-axis label. "
+              "Default: detected from the po.dat header.")
     )
     return parser.parse_args()
 
@@ -306,11 +295,8 @@ def main():
     args = parse_args()
 
     df, mode, xlabel, xcol = read_po_dat(args.input, forced_mode=args.mode)
-    if args.mode is None:
-        print(f"  [aviso] --mode não informado; assumindo 'thermal' "
-              f"(po.dat não permite detectar o modo real). Use --mode se necessário.")
 
-    # Nome de saída descritivo se não for especificado pelo usuário
+    # descriptive output name unless one is given
     if args.output:
         output = args.output
     else:
@@ -320,11 +306,11 @@ def main():
 
     print(f"\n  McLics Analyzer")
     print(f"  {'─'*40}")
-    print(f"  Entrada : {args.input}")
-    print(f"  Saída   : {output}")
-    print(f"  Modo    : {mode}")
-    print(f"  Pontos  : {len(df)}")
-    print(f"  {xcol} de {df['x'].min():.4f} até {df['x'].max():.4f}\n")
+    print(f"  Input   : {args.input}")
+    print(f"  Output  : {output}")
+    print(f"  Mode    : {mode}")
+    print(f"  Points  : {len(df)}")
+    print(f"  {xcol} from {df['x'].min():.4f} to {df['x'].max():.4f}\n")
 
     if args.txt:
         print_stats(df, xlabel)
@@ -333,7 +319,7 @@ def main():
 
     Tx = find_transition(df)
     if Tx is not None:
-        print(f"  Transição de fase estimada em {xcol} ≈ {Tx:.4f}")
+        print(f"  Estimated phase transition at {xcol} ≈ {Tx:.4f}")
 
     print()
 

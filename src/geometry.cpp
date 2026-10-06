@@ -81,8 +81,9 @@ void Geometry::Boundary_Init(Parameters *params) {
     try {
       anchoring = params->anchoring_type.at(ii);
     } catch (std::out_of_range dummy_var) {
-      std::cout << "You must define " << nSurfaces << " boundaries.\nPlease review your input file.\nAborting the program.\n\n";
-      exit(0);
+      fprintf(stderr, "  [ERROR] The geometry has %d surface(s), but anchoring_type %d is not defined in the input file.\n",
+              nSurfaces, ii);
+      exit(2);
     }
     if (strcasecmp(anchoring.c_str(), "rp") == 0)
       surfaces.at(ii) = new RP_Anchoring(params, ii);

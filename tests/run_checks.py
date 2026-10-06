@@ -352,6 +352,13 @@ def error_unknown_anchoring(r):
 
 
 @check
+def error_missing_anchoring(r):
+    """A surface without anchoring_type stops the run with an error status (run scripts must not mark it as done)."""
+    expect_error(r, plus(base(Nz=6, geometry="slab"), "anchoring_type 0 homeotropic", "W 0 1"),
+                 "anchoring_type 1 is not defined")
+
+
+@check
 def error_negative_temperature(r):
     """Negative temperatures are rejected (T = 0 is allowed)."""
     expect_error(r, base(Ti=-0.1, Tf=-0.1), "Ti must be >= 0")

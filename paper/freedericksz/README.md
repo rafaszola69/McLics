@@ -15,7 +15,7 @@ Since E_c² ∝ K_i, the critical fields give K1/K2 = (E_c splay / E_c twist)² 
 ## Running
 
 ```bash
-cd artigo/freedericksz
+cd paper/freedericksz
 ./run.sh            # the three cells, 2 seeds each, on the GPU (EVOL=electric for the CPU)
 python3 make_figures.py
 ```

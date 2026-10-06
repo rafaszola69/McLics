@@ -34,6 +34,7 @@
 - [Surface anchoring](#surface-anchoring)
 - [Electric field](#electric-field)
 - [Output](#output)
+- [Analysis tools](#analysis-tools)
 - [Testing](#testing)
 - [Project layout](#project-layout)
 - [Notes](#notes)
@@ -478,6 +479,17 @@ consecutive points never share a name. In the `step` and `quench` modes `<id>` i
 
 ---
 
+## Analysis tools
+
+```bash
+python3 tools/analyze.py po.dat                 # plot S, E and Var(S) versus T (or field, or block)
+python3 tools/average_replicas.py seed*/po.dat  # average po.dat over runs that differ only in the seed
+```
+
+Both need Python 3 with numpy (and pandas and matplotlib for `analyze.py`); see `--help`.
+
+---
+
 ## Testing
 
 ```bash
@@ -523,10 +535,11 @@ mclics/
 │   ├── ic.cpp                     # Initial conditions
 │   └── reduce.cu, stringGPU.cu    # GPU sums and string comparison
 │
-├── analyze.py                     # Plots of po.dat
-├── average_replicas.py            # Average of po.dat over runs with different seeds
+├── tools/
+│   ├── analyze.py                 # Plots of po.dat
+│   └── average_replicas.py        # Average of po.dat over runs with different seeds
 ├── tests/                         # Quick checks and regression test (see tests/README.md)
-├── artigo/                        # Scripts for the test problems and figures of the paper
+├── paper/                         # Inputs and scripts of the test problems of the paper (see paper/README.md)
 └── Makefile
 ```
 

@@ -1,7 +1,7 @@
 # Further test problems of the McLics paper
 
 ```bash
-cd artigo/examples
+cd paper/examples
 ./run.sh            # or by stage: twist | twistT | cano | llbulk | llheat | homeo | chiral
 python3 make_figures.py
 ```

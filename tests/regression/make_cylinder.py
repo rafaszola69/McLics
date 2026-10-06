@@ -8,7 +8,7 @@ make_cylinder.py N L OUTDIR — geometry and initial condition of the cylinder c
 Writes OUTDIR/cyl_N<N>_L<L>.csv (custom geometry: a cylinder along z in an N x N x L box, bulk inside the radius
 (N-1)/2 - 1, a homeotropic surface shell up to (N-1)/2 + 1, empty outside, radial normals) and
 OUTDIR/helix_N<N>_L<L>.csv (two +1/2 disclination lines making one full turn over L). Same rules as
-artigo/cylinder/prepare.py, with the Python standard library only.
+paper/cylinder/prepare.py, with the Python standard library only.
 """
 import math
 import os

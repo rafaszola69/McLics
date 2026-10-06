@@ -5,13 +5,13 @@
 analyze.py — plots the results of McLics (po.dat)
 =================================================
 Usage:
-    python3 analyze.py                        # reads po.dat in the current folder
-    python3 analyze.py results/po.dat         # reads a given file
-    python3 analyze.py po.dat -o plot.png     # saves to a given file
-    python3 analyze.py po.dat --show          # also shows the interactive plot
-    python3 analyze.py po.dat --txt           # prints a table of statistics
-    python3 analyze.py po.dat --dark          # dark theme (presentations)
-    python3 analyze.py po.dat --mode electric # sets the x-axis label explicitly
+    python3 tools/analyze.py                        # reads po.dat in the current folder
+    python3 tools/analyze.py results/po.dat         # reads a given file
+    python3 tools/analyze.py po.dat -o plot.png     # saves to a given file
+    python3 tools/analyze.py po.dat --show          # also shows the interactive plot
+    python3 tools/analyze.py po.dat --txt           # prints a table of statistics
+    python3 tools/analyze.py po.dat --dark          # dark theme (presentations)
+    python3 tools/analyze.py po.dat --mode electric # sets the x-axis label explicitly
 
 Requires numpy, pandas and matplotlib (e.g. in a virtual environment:
 python3 -m venv venv && source venv/bin/activate && pip install numpy pandas matplotlib).

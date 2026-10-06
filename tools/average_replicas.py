@@ -13,8 +13,8 @@ This script combines N independent replicas (same input file, different `seed`) 
 statistics.
 
 Usage:
-    python3 average_replicas.py run_seed1/po.dat run_seed2/po.dat ... -o po_avg.dat
-    python3 average_replicas.py replicas/seed*/po.dat -o po_avg.dat --txt
+    python3 tools/average_replicas.py run_seed1/po.dat run_seed2/po.dat ... -o po_avg.dat
+    python3 tools/average_replicas.py replicas/seed*/po.dat -o po_avg.dat --txt
 
 Making the replicas:
     copy the input file to N folders, changing only the `seed` line (1, 2, 3, ...), run mclics in each of them,

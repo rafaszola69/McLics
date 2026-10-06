@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-sr_table.py — radial order S_r of the homeotropic droplets for C = +0.3, -0.3, 0 (artigo/runs/droplets) and for the
+sr_table.py — radial order S_r of the homeotropic droplets for C = +0.3, -0.3, 0 (paper/runs/droplets) and for the
 Lebwohl-Lasher potential with the same nematic coupling (pear/runs/ll, A = 1.0), all with homeotropic W = 1.5.
 
 For each radius and temperature it prints the mean and the standard deviation over runs, and the largest difference
 between the variants in units of the largest standard deviation. Output: figs/sr_table.txt and a LaTeX table in
 figs/sr_table.tex.
 
-  python3 sr_table.py [--T 0.75 0.5 0.1] [--ll /path/to/pear/runs/ll] [--droplets /path/to/artigo/runs/droplets]
+  python3 sr_table.py [--T 0.75 0.5 0.1] [--ll /path/to/pear/runs/ll] [--droplets /path/to/paper/runs/droplets]
 """
 import argparse
 import glob

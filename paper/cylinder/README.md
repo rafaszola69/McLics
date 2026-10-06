@@ -31,11 +31,11 @@ Only the final (lowest-T) snapshot is kept, gzipped. Finished runs are marked `D
 - (b) E(ξ) at L = 48, using only runs whose twist stayed within 0.15 turns of the imposed one.
 - (c) λ vs bulk pitch p, compared with λ = p and λ = 1.45 p.
 
-## Later stages and article figure (2026-10-05)
+## Later stages and paper figure
 - `./run.sh stretch`: a relaxed one-turn helix from the scan, stretched along z (`prepare.py stretch`) to λ up to
   4.5 p and relaxed at T = 0.1. `KSET=eq` / `KSET=wb` run the same stages with equal K or the K ratios of Wand & Bates
-  (folders `runs_eqK/`, `runs_wbK/`); the article uses E7 only (`runs/`).
+  (folders `runs_eqK/`, `runs_wbK/`); the paper uses E7 (`runs/`) and the equal-K stretched branch (`runs_eqK/`).
 - `energy_terms.py` → `figs_terms/`: Frank decomposition (splay, twist, bend) of the stretched states.
-- `make_paper_figure.py` → `figs/fig_cylinder_paper.pdf` (renders in `figs/render_helix`, `figs/render_streched`,
-  made by the user from `runs/scan/p25/R10/L72/seed1|3` and `runs/stretch/p25/R10/L110/seed1`). Text in
-  `artigo/latex/cylinder_section.tex`, also inserted in `main.tex`.
+- `make_paper_figure.py` → `figs/fig_cylinder_paper.pdf`. Panels (a) and (b) are 3D renders of the disclination
+  lines made outside McLics from the snapshots `runs/scan/p25/R10/L72/seed2` and `runs/stretch/p25/R10/L110/seed1`;
+  the script reads them from `figs/render_helix2/` and `figs/render_streched/`.

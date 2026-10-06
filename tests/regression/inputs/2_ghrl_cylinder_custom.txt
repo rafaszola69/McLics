@@ -1,0 +1,25 @@
+Nx 23
+Ny 23
+Nz 24
+geometry custom
+boundary_file ../../cyl_N23_L24.csv
+xbound free
+ybound free
+zbound periodic
+potential ghrl
+k11 1.48
+k22 1
+k33 2.28
+p0 25
+anchoring_type 0 homeotropic_ghrl
+W 0 5
+radial cylinder
+ic ic_file
+ic_file ../../helix_N23_L24.csv
+evol thermalGPU
+Ti 0.375
+Tf 0.125
+dT -0.125
+MCT 500
+MCS 300
+seed 2

@@ -7,6 +7,7 @@
 #    make            -> GPU binary (mclics), requires nvcc
 #    make CPU        -> CPU-only binary (mclics)
 #    make clean      -> remove build artefacts and the binary
+#    make test       -> quick checks of ./mclics against known answers (CPU modes); make test-gpu: GPU modes
 #    make clean-data -> remove simulation output (ic.csv, po.dat, director_field_*.csv,
 #                        mclics_*.png written by analyze.py)
 # ===========================================================================
@@ -90,4 +91,11 @@ clean-data:
 	@find . -maxdepth 1 -type f -name "mclics_*.png" -delete
 	@echo "Simulation output removed (ic.csv, po.dat, director_field_*.csv, mclics_*.png)."
 
-.PHONY: all CPU debug clean clean-data renew
+# quick checks against known answers (tests/run_checks.py), with the program built last (./mclics)
+test:
+	@python3 tests/run_checks.py ./${PROGRAM}
+
+test-gpu:
+	@python3 tests/run_checks.py ./${PROGRAM} --gpu
+
+.PHONY: all CPU debug clean clean-data renew test test-gpu

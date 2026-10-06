@@ -1,0 +1,17 @@
+Nx 21
+Ny 21
+Nz 21
+geometry sphere
+potential pear
+A 1.5
+B1 0.09
+C 0.3
+anchoring_type 0 homeotropic
+W 0 1.5
+evol thermalGPU
+Ti 1.0
+Tf 0.5
+dT -0.25
+MCT 500
+MCS 300
+seed 4

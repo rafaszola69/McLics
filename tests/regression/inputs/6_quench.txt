@@ -1,0 +1,16 @@
+Nx 16
+Ny 16
+Nz 16
+geometry bulk
+xbound periodic
+ybound periodic
+zbound periodic
+potential ll
+evol quenchGPU
+Ti 1.5
+Tf 0.5
+dT 1.0
+MCT 300
+MCS 100
+fn 2
+seed 7

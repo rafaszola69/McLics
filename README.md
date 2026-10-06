@@ -34,6 +34,7 @@
 - [Surface anchoring](#surface-anchoring)
 - [Electric field](#electric-field)
 - [Output](#output)
+- [Testing](#testing)
 - [Project layout](#project-layout)
 - [Notes](#notes)
 - [License](#license)
@@ -477,6 +478,18 @@ consecutive points never share a name. In the `step` and `quench` modes `<id>` i
 
 ---
 
+## Testing
+
+```bash
+make test        # quick checks of ./mclics against known answers (CPU modes, a few seconds)
+make test-gpu    # the same checks with the GPU modes
+```
+
+`tests/regression/run_regression.sh OLD NEW` compares two versions of the program on seven longer cases and is
+meant for changes that should not alter the results. See [tests/README.md](tests/README.md).
+
+---
+
 ## Project layout
 
 ```
@@ -512,6 +525,7 @@ mclics/
 │
 ├── analyze.py                     # Plots of po.dat
 ├── average_replicas.py            # Average of po.dat over runs with different seeds
+├── tests/                         # Quick checks and regression test (see tests/README.md)
 ├── artigo/                        # Scripts for the test problems and figures of the paper
 └── Makefile
 ```

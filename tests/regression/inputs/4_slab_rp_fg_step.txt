@@ -1,0 +1,19 @@
+Nx 16
+Ny 16
+Nz 12
+geometry slab
+xbound periodic
+ybound periodic
+potential ll
+anchoring_type 0 rp
+anchoring_type 1 fg
+W 0 1
+W 1 1
+theta_s 0 90
+phi_s 0 0
+evol stepGPU
+Ti 0.5
+MCT 300
+MCS 100
+fn 3
+seed 5

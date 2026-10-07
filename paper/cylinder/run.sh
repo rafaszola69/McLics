@@ -19,6 +19,9 @@
 #   P0="25 40" RADII="10" LS="..." SEEDS="1 2 3" ANCH=homeotropic_ghrl W=5 ./run.sh       override the defaults
 #   KSET=eq LS="24 30 36 42 48" ./run.sh scan; KSET=eq ./run.sh stretch     equal elastic constants (runs_eqK/)
 set -euo pipefail
+# Runs started in parallel use one thread each: a GOMP_CPU_AFFINITY list in the environment would bind all of
+# them to the same CPU (the first one in the list).
+unset GOMP_CPU_AFFINITY
 cd "$(dirname "$0")"
 
 STAGE=${1:-all}

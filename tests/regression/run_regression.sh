@@ -12,6 +12,9 @@
 #
 # Results go to out/<case>/{old,new}/; the comparison is printed and saved to out/summary.txt.
 set -uo pipefail
+# Runs started in parallel use one thread each: a GOMP_CPU_AFFINITY list in the environment would bind all of
+# them to the same CPU (the first one in the list).
+unset GOMP_CPU_AFFINITY
 export LC_NUMERIC=C  # decimal point in printf/bc whatever the system locale
 cd "$(dirname "$0")"
 

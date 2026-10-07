@@ -24,6 +24,8 @@
 # Uses the mclics found in the PATH (built with make, so that the GPU modes exist). Results are appended to
 # results.csv; then: python3 make_table.py
 set -euo pipefail
+# Let the operating system place the threads: a GOMP_CPU_AFFINITY list in the environment would bind them.
+unset GOMP_CPU_AFFINITY
 cd "$(dirname "$0")"
 
 THREADS=${THREADS:-"8 16"}

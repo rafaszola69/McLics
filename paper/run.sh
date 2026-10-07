@@ -17,6 +17,9 @@
 # Runs with a DONE file are skipped, so the script can be interrupted and relaunched.
 # Afterwards: python3 make_figures.py
 set -euo pipefail
+# Runs started in parallel use one thread each: a GOMP_CPU_AFFINITY list in the environment would bind all of
+# them to the same CPU (the first one in the list).
+unset GOMP_CPU_AFFINITY
 cd "$(dirname "$0")"
 
 STAGE=${1:-all}

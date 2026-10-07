@@ -6,8 +6,10 @@ For each snapshot the gradient of the director is taken by central differences o
 two axial neighbours are bulk sites too (z periodic), aligning each neighbour with the central director first (n and -n
 are the same state). From it, per site:
     splay s = div n,   twist t = n . curl n,   bend b = |n x curl n|^2,
-and the Frank energy density f = K11 s^2/2 + K22 (t - t0)^2/2 + K33 b/2 with t0 = +-2*pi/p (sign taken from the data:
-+ for p0 > 0, checked on the bulk cholesteric of runs/bulkp: t = 0.252 vs 2*pi/p = 0.254). Sites within 1.5 lattice spacings of a disclination are reported apart
+and the Frank energy density f = K1* s^2/2 + K2* (t - t0)^2/2 + K3* b/2 with t0 = +-2*pi/p (sign taken from the data:
++ for p0 > 0, checked on the bulk cholesteric of runs/bulkp: t = 0.252 vs 2*pi/p = 0.254). The elastic constants are in
+lattice units, Ki* = Lambda* Ki/K2 with Lambda* = 9/|K1/K2 - 3 - K3/K2| (the GHRL mapping, checked by the Freedericksz
+test), and f is multiplied by 2 to compare it with the energy E of po.dat, in which every bond is counted twice. Sites within 1.5 lattice spacings of a disclination are reported apart
 (the continuum density is not meaningful at the core). Also <nz^2>.
 
   python3 energy_terms.py                 -> figs_terms/fig_terms.png, figs_terms/terms.csv
@@ -119,9 +121,11 @@ def main():
                 continue
             pb = 2 * np.pi / np.arcsin(2 * np.pi / p0)
             t0 = 2 * np.pi / pb                                 # natural twist (+ for p0 > 0, checked on runs/bulkp)
-            fs = K[0] * g["s2"] / 2
-            ft = K[1] * (g["t2"] - 2 * t0 * g["t"] + t0 ** 2) / 2
-            fb = K[2] * g["b2"] / 2
+            lam = 9.0 / abs(K[0] / K[1] - 3 - K[2] / K[1])     # Lambda*: Ki* = lam * Ki / K2 in lattice units
+            unit = 2 * lam / K[1]                              # x2: po.dat E counts every bond twice
+            fs = unit * K[0] * g["s2"] / 2
+            ft = unit * K[1] * (g["t2"] - 2 * t0 * g["t"] + t0 ** 2) / 2
+            fb = unit * K[2] * g["b2"] / 2
             x = g["L"] / pb
             ax = axes[0, col]
             ffar = (fs + ft + fb) * g["n_far"] / g["n_bulk"]          # per bulk site, like E

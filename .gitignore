@@ -19,6 +19,7 @@ mclics_*.png
 runs*/
 figs*/
 figures.tex
+table.tex
 .running
 DONE
 

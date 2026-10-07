@@ -342,7 +342,7 @@ void print_parameters(Parameters params) {
 //   lambda = (L/9)(2 K1/K2 - 3 + K3/K2),  mu = L (1 - K1/K2),  nu = (L/9)(K1/K2 - 3 - K3/K2),
 //   rho = (L/9)(K1/K2 - K3/K2),  sigma = -q0 L,  with L = Lambda* = Scale k22 and q0 = 2 pi / p0.
 // Scale is chosen so that |nu| = 1, which fixes the energy (and temperature) unit as in the LL model; only the
-// ratios of the k's matter. k11 - 3 k22 - k33 = 0 is rejected by validate_parameters.
+// ratios of the k's matter. nu = -1 needs k11 < 3 k22 + k33 (checked by validate_parameters).
 void setGHRL(Parameters &params) {
   float k11 = params.k11;
   float k22 = params.k22;
@@ -431,10 +431,11 @@ void validate_parameters(const Parameters &p) {
     if (p.k11 <= 0 || p.k22 <= 0 || p.k33 <= 0) {
       snprintf(msg, sizeof(msg), "k11, k22 and k33 must be > 0 (got %g, %g, %g).", p.k11, p.k22, p.k33);
       input_error(msg);
-    } else if (fabs(p.k11 - 3 * p.k22 - p.k33) < 1e-6 * p.k22) {
+    } else if (p.k11 - 3 * p.k22 - p.k33 >= -1e-6 * p.k22) {
+      // nu = (Lambda*/9)(k11/k22 - 3 - k33/k22) must be negative with Lambda* > 0 (nematic energy scale)
       snprintf(msg, sizeof(msg),
-               "k11 - 3 k22 - k33 = 0 (k11 = %g, k22 = %g, k33 = %g): the GHRL energy scale is undefined.", p.k11,
-               p.k22, p.k33);
+               "The GHRL potential needs k11 < 3 k22 + k33 (got k11 = %g, k22 = %g, k33 = %g): otherwise its energy "
+               "scale nu is not negative and the pair potential is not nematic.", p.k11, p.k22, p.k33);
       input_error(msg);
     }
     if (p.p0 != 0 && fabs(p.p0) < 2 * M_PI)

@@ -35,7 +35,7 @@ float Bulk_Energy_Lebwohl_Lasher(float ni[3], float nj[3], Parameters *params, f
 // with a_i = n_i.r, a_j = n_j.r, b = n_i.n_j, Y = P2(a_i) + P2(a_j) and c = n_i.(n_j x r) for r taken from j to i
 // (the article's r_jk); here rij points from i to j, so `cross` = r_ij.(n_j x n_i) is the same c.
 // The coefficients are computed from k11, k22, k33 and p0 in setGHRL (io.cpp), with |nu| = 1 as the
-// energy scale (nu = -1 whenever k11 < 3 k22 + k33, as for real nematics).
+// energy scale: nu = -1, which requires k11 < 3 k22 + k33 (checked by validate_parameters).
 // sgn(b) makes the chiral term invariant under n -> -n.
 float Bulk_Energy_GHRL(float ni[3], float nj[3], Parameters *params, float rij[3]) {
   const float el = params->ghrl_lambda;

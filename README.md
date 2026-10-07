@@ -180,7 +180,7 @@ seed        1
 | `A` | float | 1.0 | Nematic coupling (LL and pear) |
 | `B1` | float | 0.04 | Polar coupling `B` of the pear potential |
 | `C` | float | 0.3 | Splay–polarization coupling of the pear potential |
-| `k11`, `k22`, `k33` | float | 1.0 | Frank elastic constants (splay, twist, bend) of the GHRL potential; only their ratios matter |
+| `k11`, `k22`, `k33` | float | 1.0 | Frank elastic constants (splay, twist, bend) of the GHRL potential; only their ratios matter, and they must satisfy `k11 < 3 k22 + k33` (otherwise the energy scale of the potential is not negative) |
 | `p0` | float | 0 | Natural cholesteric pitch in lattice spacings (GHRL; `0` = nematic) |
 
 #### Evolution and Monte Carlo

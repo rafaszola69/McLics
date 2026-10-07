@@ -359,6 +359,12 @@ def error_missing_anchoring(r):
 
 
 @check
+def error_ghrl_constants(r):
+    """GHRL with k11 > 3 k22 + k33 is rejected: the energy scale nu would be positive (not nematic)."""
+    expect_error(r, base(potential="ghrl", k11=5, k22=1, k33=1), "needs k11 < 3 k22 + k33")
+
+
+@check
 def error_negative_temperature(r):
     """Negative temperatures are rejected (T = 0 is allowed)."""
     expect_error(r, base(Ti=-0.1, Tf=-0.1), "Ti must be >= 0")

@@ -575,6 +575,12 @@ def captions(nums, args):
         ll_txt = (f"Weighted extrapolations: {prot}; combined $T_{{NI}}={m:.4f}\\pm{e:.4f}$, "
                   f"{100 * abs(m / 1.1232 - 1):.2f}\\% ({nums['ll_TNI_comb_nsigma']:.1f} standard deviations) below the "
                   f"literature value $1.1232$.")
+        pc, ph = nums.get("ll_peaks", {}), nums.get("ll_peaks_heat", {})
+        big = sorted(set(pc) & set(ph))[-2:]     # cooling below heating for the largest lattices: metastable isotropic
+        if len(big) == 2 and all(ph[L] > pc[L] for L in big):
+            ll_txt += (" For the two largest lattices the maximum on cooling lies "
+                       + " and ".join(f"${ph[L] - pc[L]:.3f}$ ($L={L}$)" for L in big)
+                       + " below that on heating, as expected from a metastable isotropic phase on cooling.")
     elif nums.get("ll_TNI_mid") is not None:
         ll_txt = (f"The extrapolations give {f('ll_TNI_inf', 4)} (cooling) and {f('ll_TNI_inf_heat', 4)} (heating), "
                   f"i.e. $T_{{NI}}={f('ll_TNI_mid', 4)}\\pm{f('ll_TNI_halfwidth', 4)}$, within "

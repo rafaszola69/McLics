@@ -62,7 +62,8 @@ def main():
             dt, ns, n, L = cost[(c, m, th)]
             base = cost.get((c, "cpu", 1))
             sp = base[1] / ns if base else float("nan")  # no single-thread value: speedup unknown
-            cells.append(r"%s & %.1f$\times$" % ("%.0f" % ns if ns >= 100 else "%.3g" % ns, sp))
+            nsf = "%.0f" % ns if ns >= 100 else ("%.1f" % ns if ns >= 10 else "%.2f" % ns)
+            cells.append(r"%s & %s$\times$" % (nsf, "%.0f" % sp if sp >= 100 else "%.1f" % sp))
             line += "%-24s" % ("%.3g ns (x%.3g) %.0fs" % (ns, sp, dt))
         rows.append(label(m, th) + " & " + " & ".join(cells) + r" \\")
         print(line)
@@ -73,7 +74,7 @@ def main():
     tex = r"""\begin{table*}[htbp]
 \centering
 \caption{Time per site update $t$ of the Monte Carlo step and speedup relative to one CPU thread, for the
-Lebwohl--Lasher potential in periodic boxes of three sizes and for the GHRL potential (E7 constants). %s}
+Lebwohl--Lasher potential in periodic boxes of different sizes and for the GHRL potential (E7 constants). %s}
 \label{tab:performance_benchmark}
 \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}l%s@{}}
 \toprule

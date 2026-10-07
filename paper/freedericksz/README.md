@@ -31,7 +31,9 @@ the thresholds are overestimated (the twist one most) and the ratios of elastic 
 
 - `figs/fig_freedericksz.pdf` — mid-cell deformation angle versus field for the three cells (band: range over the
   seeds; dashed lines: critical fields).
-- `figs/numbers.txt` — critical fields (with the error of the mean over the seeds) and the ratios K1/K2 and K3/K2.
+- `figs/numbers.txt` — critical fields (with the error of the mean over the seeds), the ratios K1/K2 and K3/K2, and
+  the critical fields of the continuum theory for the same cell, E_c = π/(d + 2b)·√(K*/2Δε) with K* = Λ*K_i/K_2,
+  b = K*/(2W) and d = Nz − 1 (no free parameter).
 - `figs/freedericksz_angles.csv` — the curves of the figure.
 
 The deformation angle is the mean of acos(|n · n0|) over the two middle layers, with n0 the initial easy axis. The

@@ -16,6 +16,10 @@ well below the threshold (baseline = median angle of the first five field values
 The field where the angle crosses 20 degrees (interpolated) is also given. From E_c^2 ~ K_i:
 K1/K2 = (E_c splay / E_c twist)^2 and K3/K2 = (E_c bend / E_c twist)^2 (input: 1.48 and 2.28).
 
+The measured fields are compared with the continuum theory for the same cell, without free parameters:
+E_c = pi / (d + 2 b) * sqrt(K* / (2 deps)), with K* = Lambda* K_i / K_2 the elastic constant in lattice units
+(Lambda* = 9 / |K1/K2 - 3 - K3/K2|), b = K* / (2 W) the extrapolation length of the anchoring and d = Nz - 1.
+
   python3 make_figures.py [--runs runs] [--out figs]
 Writes figs/fig_freedericksz.pdf/.png, figs/freedericksz_angles.csv and figs/numbers.txt.
 """
@@ -77,6 +81,26 @@ def angle_curve(run, axis):
                if int(r[cz]) in mid and int(r[cpt]) > 0]
         out.append(sum(ang) / len(ang))
     return np.array(fields), np.array(out)
+
+
+def continuum_fields(run):
+    """Critical fields of the continuum theory for the cell of one run (finite anchoring)."""
+    p = read_params(run)
+    k11, k22, k33 = (float(p.get(k, 1)) for k in ("k11", "k22", "k33"))
+    lam = 9.0 / abs(k11 / k22 - 3 - k33 / k22)
+    d = int(p["nz"]) - 1
+    deps = abs(float(p["eleca"]))
+    W = None
+    for line in open(os.path.join(run, "input_parameters.txt")):
+        w = line.split("#")[0].split()
+        if len(w) == 3 and w[0].lower() == "w":
+            W = float(w[2])
+    out = {}
+    for cell, ki in (("splay", k11), ("twist", k22), ("bend", k33)):
+        K = lam * ki / k22
+        b = K / (2 * W)
+        out[cell] = (math.pi / (d + 2 * b) * math.sqrt(K / (2 * deps)), math.pi / d * math.sqrt(K / (2 * deps)))
+    return out
 
 
 def critical_field(E, th):
@@ -155,6 +179,15 @@ def main():
         if all(s20):
             lines.append("from the 20-degree fields: K1/K2 = %.3f, K3/K2 = %.3f" % (
                 (s20[0] / s20[1]) ** 2, (s20[2] / s20[1]) ** 2))
+    some = sorted(glob.glob(os.path.join(args.runs, "*", "seed*", "input_parameters.txt")))
+    if some:
+        th = continuum_fields(os.path.dirname(some[0]))
+        for cell in ("splay", "twist", "bend"):
+            m = res.get(cell, (None,))[0]
+            lines.append("continuum %-6s E_c = %.4f (finite anchoring), %.4f (strong anchoring)%s" % (
+                cell, th[cell][0], th[cell][1], "   measured %.4f (%+.1f%%)" % (m, 100 * (m / th[cell][0] - 1)) if m else ""))
+        lines.append("continuum ratios with this anchoring: K1/K2 -> %.3f, K3/K2 -> %.3f" % (
+            (th["splay"][0] / th["twist"][0]) ** 2, (th["bend"][0] / th["twist"][0]) ** 2))
     with open(os.path.join(args.out, "numbers.txt"), "w") as f:
         f.write("\n".join(lines) + "\n")
     with open(os.path.join(args.out, "freedericksz_angles.csv"), "w") as f:

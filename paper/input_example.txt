@@ -1,0 +1,37 @@
+# Chiral nematic (E7 elastic constants) in a hybrid cell, cooled from the isotropic phase
+# --- lattice and geometry ----------------------------------------------------
+Nx        32
+Ny        32
+Nz        20
+geometry  slab           # plates at z = 0 (surface 0) and z = Nz-1 (surface 1)
+xbound    periodic       # periodic directions need an even number of sites
+ybound    periodic
+# --- pair potential ----------------------------------------------------------
+potential ghrl
+k11       1.48           # Frank constants; only the ratios are used
+k22       1
+k33       2.28
+p0        40             # natural pitch in lattice spacings (0: no chirality)
+# --- surfaces ----------------------------------------------------------------
+anchoring_type 0 homeotropic   # bottom plate: normal anchoring
+W              0 1
+anchoring_type 1 rp            # top plate: planar, along x
+W              1 1
+theta_s        1 90
+phi_s          1 0
+# --- applied field -----------------------------------------------------------
+elecA     0.05           # dielectric coupling
+elecX     0              # field direction (normalized by the program)
+elecY     0
+elecZ     1
+# --- evolution ---------------------------------------------------------------
+evol      thermal        # thermalGPU runs the same evolution on the GPU
+Ti        1.2            # from the isotropic phase ...
+Tf        0.1            # ... down to T = 0.1
+dT        -0.05
+MCT       10000          # steps at each temperature before measuring
+MCS       2000           # measurement steps at each temperature
+# --- initial condition and output --------------------------------------------
+ic        random
+seed      1
+radial    none           # no radial columns in po.dat

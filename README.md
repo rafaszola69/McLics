@@ -71,16 +71,20 @@ In both cases the program is `./mclics`; the CPU code is parallelized with OpenM
 |---|---|---|
 | GCC | 9+ | Building (CPU and GPU) |
 | NVCC (CUDA Toolkit) | 11+ | GPU support (`make`) |
-| OpenMP | — | CPU parallelism |
+| OpenMP (libgomp) | comes with GCC | CPU parallelism |
 | GSL (GNU Scientific Library) | 2.x | Random numbers and linear algebra (eigenvalues of the Q tensor) |
 
 On Ubuntu/Debian:
 
 ```bash
-sudo apt install g++ libgsl-dev libomp-dev
+sudo apt install g++ make libgsl-dev
 # For GPU support, install the CUDA Toolkit that matches your driver:
 # https://developer.nvidia.com/cuda-downloads
 ```
+
+On Windows 10 and 11, use the Windows Subsystem for Linux (`wsl --install` in a PowerShell opened as administrator,
+then the Ubuntu commands above inside WSL). NVIDIA GPUs work from WSL 2 with the regular Windows driver and the
+CUDA Toolkit for WSL-Ubuntu. Native Windows compilers are not supported.
 
 ---
 

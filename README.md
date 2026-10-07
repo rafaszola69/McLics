@@ -473,9 +473,10 @@ x,y,z,nx,ny,nz,S,pt
 `(x,y,z)` grid indices · `(nx,ny,nz)` director · `S` local order parameter (largest eigenvalue of Q averaged over the
 site and its non-empty neighbours) · `pt` point type (`1` bulk, `≥2` surface, `0` empty).
 
-The name is `director_field_<int(100·x)>.csv`, with `x` the temperature (`thermal`) or the field (`electric`), e.g.
-`director_field_50.csv` for `T = 0.5`. For steps finer than 0.01 the factor becomes 1000, 10000, ..., so that
-consecutive points never share a name. In the `step` and `quench` modes `<id>` is the block number.
+The name is `director_field_<100·x>.csv`, with `x` the temperature (`thermal`) or the field (`electric`) written as an
+integer, e.g. `director_field_50.csv` for `T = 0.5` and `director_field_115.csv` for `T = 1.15` (a small margin
+absorbs the rounding of the input values, so the name is never one too low). For steps finer than 0.01 the factor
+becomes 1000, 10000, ..., so that consecutive points never share a name. In the `step` and `quench` modes `<id>` is the block number.
 
 > At points with `pt = 0` (outside the sample) `S` is written as `NaN`: there is no material there. Tools such as
 > pandas, Excel and Origin recognize `NaN` and leave it out of plots and statistics.

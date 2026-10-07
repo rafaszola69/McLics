@@ -7,7 +7,7 @@ Reads runs/ (produced by run.sh) and writes to figs/:
                               (b) transition temperatures vs B1 (I-N-polar vs direct I-polar)
   fig_pear_droplet.pdf/.png   (a,b) hedgehog cross-sections at low T for C=+0.3 and C=-0.3;
                               (c) radial polarization vs T for C=+0.3, -0.3, 0; (d) P_r/C for C=0.1, 0.2, 0.3
-  fig_pear_profile.pdf/.png   (a) polarization profile p(r) for three droplet sizes; (b) r p(r)
+  fig_pear_profile.pdf/.png   (a) polarization profile P(r) for three droplet sizes; (b) r P(r)
   figures.tex                 LaTeX figure environments with English captions (numbers filled in from the data)
   numbers.txt                 the numbers quoted in the captions, for checking
 
@@ -346,8 +346,8 @@ def fig_profile(runs_dir, T, out, nums):
     for ax in axes:
         ax.axhline(0, color=INK2, lw=0.6)
         ax.set_xlabel(r"$r$ (lattice units)")
-    axes[0].set_ylabel(r"$p(r)=\langle\hat{\mathbf{n}}\cdot\hat{\mathbf{r}}\rangle_{\mathrm{shell}}$")
-    axes[1].set_ylabel(r"$r\,p(r)$")
+    axes[0].set_ylabel(r"$P(r)=\langle\hat{\mathbf{n}}\cdot\hat{\mathbf{r}}\rangle_{\mathrm{shell}}$")
+    axes[1].set_ylabel(r"$r\,P(r)$")
     axes[0].legend(loc="upper right")
     panel(axes[0], "a")
     panel(axes[1], "b")
@@ -429,9 +429,9 @@ the induced polarization is linear in $C$.{lin_txt}}}
 \centering
 \includegraphics[width=\textwidth]{{figs/fig_pear_profile.pdf}}
 \caption{{Radial profile of the induced polarization at $T={args.profile_T:g}$, averaged over spherical shells and over
-runs with $C=\pm0.3$ (symmetrized), for three droplet radii. (a) $p(r)$ collapses when plotted against the distance
+runs with $C=\pm0.3$ (symmetrized), for three droplet radii. (a) $P(r)$ collapses when plotted against the distance
 $r$ from the centre, showing that the polarization responds locally to the splay of the hedgehog,
-$\nabla\cdot\hat{{\mathbf n}}=2/r$. (b) $r\,p(r)$ reaches a common plateau, i.e. $p(r)\simeq\kappa/r$ away from the defect
+$\nabla\cdot\hat{{\mathbf n}}=2/r$. (b) $r\,P(r)$ reaches a common plateau, i.e. $P(r)\simeq\kappa/r$ away from the defect
 core and from the anchoring surface, with $\kappa\approx{fmt(K)}$ (plateau values {ks}). Averaging $\kappa/r$ over the droplet
 volume gives $P_r\simeq 3\kappa/2R$. Shaded bands: statistical error of each shell average (standard deviation over the sites
 of the shell divided by the square root of their number).}}

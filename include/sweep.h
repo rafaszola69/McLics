@@ -25,7 +25,7 @@ inline double sweep_value(double a, double b, double d, int n, int npoints) {
 
 inline int snapshot_scale(double step) {
   int S = 100;
-  while (S * fabs(step) < 1 - 1e-9 && S < 100000000) S *= 10;
+  while (S * fabs(step) < 1 - 1e-3 && S < 100000000) S *= 10;  // 1e-3: the step is read as a float (0.01 -> 0.0099999998)
   return S;
 }
 

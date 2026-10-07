@@ -238,6 +238,16 @@ def thermal_fine_step_names(r):
 
 
 @check
+def thermal_step_001_names(r):
+    """dT = -0.01 (read as the float -0.0099999998) still uses 100 T: director_field_120.csv ... _110.csv."""
+    d = r.run(base(Nx=4, Ny=4, Nz=4, Ti=1.2, Tf=1.1, dT=-0.01, ic="random"))
+    ok_run(r, d)
+    want = sorted("director_field_%d.csv" % v for v in range(110, 121))
+    if snapshots(d) != want:
+        raise Fail("snapshots %s" % snapshots(d))
+
+
+@check
 def electric_sweep(r):
     """Electric mode, E = 0 ... 1.2 in steps of 0.1: 13 points (the last one included), first column `field`."""
     d = r.run(base(Nx=4, Ny=4, Nz=4, evol="electric", Ti=0.5, elecA=0.1, elecZ=1, Ei=0, Ef=1.2, dE=0.1,

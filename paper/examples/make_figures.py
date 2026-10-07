@@ -600,13 +600,14 @@ def captions(nums, args):
 \includegraphics[width=\textwidth]{{figures/fig_chol.pdf}}
 \caption{{Cholesteric pitch with the chiral GHRL potential (E7 elastic constants). (a) Equilibrium pitch at $T=0.3$,
 measured from the twist rate in the centre of a $6\times6\times48$ box (periodic in $x$ and $y$, free along the helix
-axis), for initial helices with $p_i=0.8\,p_0$, $p_0$ and $1.25\,p_0$. The pitch follows the ground state of the
-lattice pair potential,
-$p=2\pi/\arcsin(2\pi/p_0)$ (dashed), rather than the nominal $p_0$ (dotted; deviation up to
-{pct('twist_maxdev_nominal')}\%). Spread between the three initial conditions:
-{", ".join(f"{100 * v:.0f}\\% ($p_0={k:g}$)" for k, v in sorted(nums.get("twist_spread_by_p0", {}).items()))};
-for $p_0\leq12$ all of them lie below the prediction, a thermal effect [panel (b)]. (b) Ratio between the measured pitch and the lattice prediction versus temperature
-({tT_txt}): the prediction is recovered as $T\to0$, and thermal fluctuations shorten the pitch by a few percent.
+axis), for initial helices with $p_i=0.8\,p_0$, $p_0$ and $1.25\,p_0$, compared with the ground state of the lattice
+pair potential, $p=2\pi/\arcsin(2\pi/p_0)$ (dashed), and with the nominal $p_0$ (dotted). At this temperature the two
+cannot be distinguished: for $p_0\geq16$ they differ by less than the spread between initial conditions (
+{", ".join(f"{100 * v:.0f}\\% ($p_0={k:g}$)" for k, v in sorted(nums.get("twist_spread_by_p0", {}).items()))}),
+and for $p_0\leq12$ the thermal shortening of panel (b) is comparable to the lattice correction. (b) Ratio between the
+measured pitch and the lattice prediction versus temperature ({tT_txt}): as $T\to0$ the ratio tends to 1, whereas the
+nominal pitch would give {", ".join(f"{p0 / (2 * np.pi / np.arcsin(2 * np.pi / p0)):.2f} ($p_0={p0:g}$)" for p0 in (10, 8))};
+thermal fluctuations shorten the pitch by a few percent.
 (c) Total twist across a cell with planar anchoring along $x$ on both plates ($p_0=20$, $p={f('cano_p_eff', 2)}$) versus
 thickness $d$, after cooling from the isotropic phase: the twist is quantized in half turns and follows the
 minimum-energy staircase (Grandjean steps) in {nums.get('cano_match', '?')} of {nums.get('cano_n', '?')} runs; in

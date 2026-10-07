@@ -572,7 +572,8 @@ def captions(nums, args):
         fc, fh = nums.get("ll_fitw_llbulk"), nums.get("ll_fitw_llheat")
         m, e = nums["ll_TNI_comb"]
         prot = "; ".join(f"{lab} ${v[0]:.4f}\\pm{v[1]:.4f}$" for lab, v in (("cooling", fc), ("heating", fh)) if v)
-        ll_txt = (f"Weighted extrapolations: {prot}; combined $T_{{NI}}={m:.4f}\\pm{e:.4f}$, "
+        # combined error with two significant digits (0.00045 rounded to 0.0004 would not match the n-sigma below)
+        ll_txt = (f"Weighted extrapolations: {prot}; combined $T_{{NI}}={m:.5f}\\pm{e:.5f}$, "
                   f"{100 * abs(m / 1.1232 - 1):.2f}\\% ({nums['ll_TNI_comb_nsigma']:.1f} standard deviations) below the "
                   f"literature value $1.1232$.")
         pc, ph = nums.get("ll_peaks", {}), nums.get("ll_peaks_heat", {})

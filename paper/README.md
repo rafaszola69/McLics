@@ -8,6 +8,7 @@ its figures. Each campaign has a `run.sh` that writes the input files and runs t
 | `freedericksz/` | Elastic Behavior in Nematic Liquid Crystals | Fréedericksz transitions (splay, twist, bend) of the GHRL model with the E7 constants; K1/K2 and K3/K2 from the critical fields |
 | this folder (`run.sh`, `make_figures.py`, `sr_table.py`) | Splay-Induced Polarization in Nematic Droplets of Pear-Shaped Molecules | pear potential of Dhakal & Selinger: bulk phase sequence and phase diagram, polar order induced in homeotropic droplets |
 | `examples/` | Lebwohl–Lasher Isotropic–Nematic Transition; Cholesteric Pitch and Grandjean Steps; Radial, Axial and Twisted Droplets | T_NI of the LL model, pitch of the chiral GHRL helix on the lattice, Grandjean steps, droplets with homeotropic and chiral planar anchoring |
+| `benchmark/` | Appendix (performance) | time per site update of the Monte Carlo step on one CPU thread, on all cores and on the GPU |
 | `cylinder/` | Double-Helix Disclinations in a Chiral Cylinder (Custom Geometry) | custom geometry: chiral nematic in a homeotropic cylinder, double helix of +1/2 lines |
 
 **Common rules.** The scripts use the `mclics` found in the PATH and the GPU modes by default (`EVOL=thermal` or

@@ -488,6 +488,13 @@ python3 tools/average_replicas.py seed*/po.dat  # average po.dat over runs that 
 
 Both need Python 3 with numpy (and pandas and matplotlib for `analyze.py`); see `--help`.
 
+```bash
+tools/visualization/render_slices.sh 50          # director in the planes x, y, z = N/2 of director_field_50.csv
+tools/visualization/render_defects.sh free 50    # 3D view of the defects of director_field_50.csv
+```
+
+These two need ParaView (`pvbatch`); see [tools/visualization/README.md](tools/visualization/README.md).
+
 ---
 
 ## Testing
@@ -537,7 +544,8 @@ mclics/
 │
 ├── tools/
 │   ├── analyze.py                 # Plots of po.dat
-│   └── average_replicas.py        # Average of po.dat over runs with different seeds
+│   ├── average_replicas.py        # Average of po.dat over runs with different seeds
+│   └── visualization/             # Images of snapshots with ParaView: central planes and defect lines
 ├── tests/                         # Quick checks and regression test (see tests/README.md)
 ├── paper/                         # Inputs and scripts of the test problems of the paper (see paper/README.md)
 └── Makefile

@@ -272,19 +272,6 @@ Parameters read_input_file(char *fname) {
       input_file >> nn;
       input_file >> input_params.theta_s[nn];
       finish_line(input_file, parser);
-    } else if (strcasecmp(parser, "nk") * strcasecmp(parser, "neighbour_kind") * strcasecmp(parser, "neighbour") == 0) {
-      int nk_val;
-      input_file >> nk_val;
-      finish_line(input_file, parser);
-      if (nk_val != 1) {
-        fprintf(stderr,
-          "\n  [ERROR] neighbour_kind = %d is not supported.\n"
-          "          Only nk = 1 (nearest neighbours) is allowed.\n"
-          "          Please remove or correct the 'nk' entry in your parameter file.\n\n",
-          nk_val);
-        exit(1);
-      }
-      input_params.neighbourKind = 1;
     } else if (strcasecmp(parser, "elecX")*strcasecmp(parser, "Electric_field_x")*strcasecmp(parser, "EF_x") == 0) {
       input_file >> input_params.elecX;
       finish_line(input_file, parser);

@@ -37,7 +37,7 @@ class Geometry {
   virtual int *set_point_type_normals(int *pt, Parameters *params) = 0;
   virtual float site_energy(const nni ni[8]) = 0;
   // pair potential selected by `potential` (set in simulator.cpp)
-  float (*bulk_potential)(float ni[3], float nj[3], Parameters *params, float rij[3], int nk);
+  float (*bulk_potential)(float ni[3], float nj[3], Parameters *params, float rij[3]);
   float *ns;  // outward unit normals of the surface sites (3 per site, zero elsewhere)
   Parameters *params;
 };

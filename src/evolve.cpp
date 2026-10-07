@@ -92,10 +92,10 @@ void EvolveN::Monte_Carlo_Step(float &ang_var, gsl_rng **r) {
   int iBoxSize = 2;
   int jBoxSize = 2;
   int kBoxSize = 2;
-  int Ni = Nx / 2 + Nx % 2;
-  int Nj = Ny / 2 + Ny % 2;
-  int Nk = Nz / 2 + Nz % 2;
-  int Ntt = Ni * Nj * Nk;
+  int nBoxX = Nx / 2 + Nx % 2;
+  int nBoxY = Ny / 2 + Ny % 2;
+  int nBoxZ = Nz / 2 + Nz % 2;
+  int Ntt = nBoxX * nBoxY * nBoxZ;
   static bool setUp = true;
   if (setUp) {
     for (int ii = 0; ii < Nt; ii++)
@@ -111,9 +111,9 @@ void EvolveN::Monte_Carlo_Step(float &ang_var, gsl_rng **r) {
       int i, j, k;
       float nNew[3];
       int thread = omp_get_thread_num();
-      int iBox = nt % Ni;
-      int jBox = (nt / Ni) % Nj;
-      int kBox = nt / Ni / Nj;
+      int iBox = nt % nBoxX;
+      int jBox = (nt / nBoxX) % nBoxY;
+      int kBox = nt / nBoxX / nBoxY;
       int di = tick % 2;
       int dj = (tick / 2) % 2;
       int dk = tick / 4;

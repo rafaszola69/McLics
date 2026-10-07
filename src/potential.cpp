@@ -16,7 +16,7 @@
 // Pear-shaped molecules, Dhakal & Selinger, PRE 81, 031704 (2010):
 //   U = -A (n_i.n_j)^2 - B1 (n_i.n_j) - C ((1 + n_i.n_j)/2)^2 r_ij.(n_j - n_i)
 // n is a polar vector here (n and -n are different states); the C term couples polarity to splay.
-float Bulk_Energy_Selinger_Pear(float ni[3], float nj[3], Parameters *params, float rij[3], int nk) {
+float Bulk_Energy_Selinger_Pear(float ni[3], float nj[3], Parameters *params, float rij[3]) {
   float nij, polar_splay;
   nij = ni[0] * nj[0] + ni[1] * nj[1] + ni[2] * nj[2];
   polar_splay = +(1 + 2 * nij + nij * nij) * ((nj[0] - ni[0]) * rij[0] + (nj[1] - ni[1]) * rij[1] + (nj[2] - ni[2]) * rij[2]);
@@ -25,7 +25,7 @@ float Bulk_Energy_Selinger_Pear(float ni[3], float nj[3], Parameters *params, fl
 
 // Lebwohl-Lasher: U = -A P2(n_i.n_j) up to a constant, i.e. -1.5 A (n_i.n_j)^2. With A = 1 the reduced temperature
 // is the usual one (T_NI = 1.1232); note that the pear potential uses -A (n_i.n_j)^2 without the factor 1.5.
-float Bulk_Energy_Lebwohl_Lasher(float ni[3], float nj[3], Parameters *params, float rij[3], int nk) {
+float Bulk_Energy_Lebwohl_Lasher(float ni[3], float nj[3], Parameters *params, float rij[3]) {
   float nij = ni[0] * nj[0] + ni[1] * nj[1] + ni[2] * nj[2];
   return -params->A * 1.5 * nij * nij;
 }
@@ -37,7 +37,7 @@ float Bulk_Energy_Lebwohl_Lasher(float ni[3], float nj[3], Parameters *params, f
 // The coefficients are computed from k11, k22, k33 and p0 in setGHRL (io.cpp), with |nu| = 1 as the
 // energy scale (nu = -1 whenever k11 < 3 k22 + k33, as for real nematics).
 // sgn(b) makes the chiral term invariant under n -> -n.
-float Bulk_Energy_GHRL(float ni[3], float nj[3], Parameters *params, float rij[3], int nk) {
+float Bulk_Energy_GHRL(float ni[3], float nj[3], Parameters *params, float rij[3]) {
   const float el = params->ghrl_lambda;
   const float em = params->ghrl_mu;
   const float en = params->ghrl_nu;

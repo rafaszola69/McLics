@@ -17,7 +17,7 @@
 // GPU site energies (bonds + anchoring + field) for each geometry, and the anchoring kernels; same definitions as
 // the CPU code (geometry*.cpp, anchoring*.cpp). The surface kernel of surface n = pt - 2 returns the energy per unit
 // W and is multiplied by d_W[n] here.
-__device__ extern float (*bulk_potentialGPU)(float ni[3], float nj[3], Parameters *params, float rij[3], int nk);
+__device__ extern float (*bulk_potentialGPU)(float ni[3], float nj[3], Parameters *params, float rij[3]);
 __device__ extern p_Surface_Potential *d_Surface_Potential_GPU; 
 __device__ extern float *d_W; 
 __device__ extern float *d_easy;  // per-surface easy axis (used by rp_ghrl)
@@ -30,32 +30,32 @@ __device__ inline float bond_energy_GPU(const nni fullni[], Parameters *params){
   if (fullni[1].pt){
     float nj[3]={fullni[1].x,fullni[1].y,fullni[1].z};
     rij[0]=1; rij[1]=0; rij[2]=0;
-    E+= bulk_potentialGPU(ni,nj,params,rij,1);
+    E+= bulk_potentialGPU(ni,nj,params,rij);
   }
   if (fullni[2].pt){
     float nj[3]={fullni[2].x,fullni[2].y,fullni[2].z};
     rij[0]=-1; rij[1]=0; rij[2]=0;
-    E+= bulk_potentialGPU(ni,nj,params,rij,1);
+    E+= bulk_potentialGPU(ni,nj,params,rij);
   }
   if (fullni[3].pt){
     float nj[3]={fullni[3].x,fullni[3].y,fullni[3].z};
     rij[0]=0; rij[1]=1; rij[2]=0;
-    E+= bulk_potentialGPU(ni,nj,params,rij,1);
+    E+= bulk_potentialGPU(ni,nj,params,rij);
   }
   if (fullni[4].pt){
     float nj[3]={fullni[4].x,fullni[4].y,fullni[4].z};
     rij[0]=0; rij[1]=-1; rij[2]=0;
-    E+= bulk_potentialGPU(ni,nj,params,rij,1);
+    E+= bulk_potentialGPU(ni,nj,params,rij);
   }
   if (fullni[5].pt){
     float nj[3]={fullni[5].x,fullni[5].y,fullni[5].z};
     rij[0]=0; rij[1]=0; rij[2]=1;
-    E+= bulk_potentialGPU(ni,nj,params,rij,1);
+    E+= bulk_potentialGPU(ni,nj,params,rij);
   }
   if (fullni[6].pt){
     float nj[3]={fullni[6].x,fullni[6].y,fullni[6].z};
     rij[0]=0; rij[1]=0; rij[2]=-1;
-    E+= bulk_potentialGPU(ni,nj,params,rij,1);
+    E+= bulk_potentialGPU(ni,nj,params,rij);
   }
 
   return E;
@@ -135,10 +135,10 @@ __device__ float FG_Surface_Potential_GPU(float ni[3], float s[3], Parameters *p
 // GHRL anchorings: the surface acts as a phantom neighbour located along the outward normal s.
 // Same definition as the CPU code. The 4th argument is the surface easy axis (only used by rp_ghrl).
 __device__ float RP_Surface_Potential_GHRL_GPU(float ni[3], float s[3], Parameters *params, float e[3]){
-  return Bulk_Energy_GHRL_GPU(ni, e, params, s, 1);
+  return Bulk_Energy_GHRL_GPU(ni, e, params, s);
 }
 __device__ float Homeotropic_Surface_Potential_GHRL_GPU(float ni[3], float s[3], Parameters *params, float e[3]){
-  return Bulk_Energy_GHRL_GPU(ni, s, params, s, 1);
+  return Bulk_Energy_GHRL_GPU(ni, s, params, s);
 }
 __device__ float FG_Surface_Potential_GHRL_GPU(float ni[3], float s[3], Parameters *params, float e[3]){
   float ns = ni[0]*s[0]+ni[1]*s[1]+ni[2]*s[2];
@@ -146,5 +146,5 @@ __device__ float FG_Surface_Potential_GHRL_GPU(float ni[3], float s[3], Paramete
   float mod = sqrtf(nj[0]*nj[0]+nj[1]*nj[1]+nj[2]*nj[2]);
   if (mod < 1e-6f) return 0;
   nj[0] /= mod; nj[1] /= mod; nj[2] /= mod;
-  return Bulk_Energy_GHRL_GPU(ni, nj, params, s, 1);
+  return Bulk_Energy_GHRL_GPU(ni, nj, params, s);
 }

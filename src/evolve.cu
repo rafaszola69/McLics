@@ -43,7 +43,7 @@ __global__ void initRNG(curandState *const rngStates, const unsigned int seed, d
 // Pointers set on the device by setGPUup / setSurfaces / passGPUns:
 //   d_ns       per-site vector passed to the anchoring kernel: the outward normal, or the easy axis for rp and
 //              rp_tangent (see Monte_Carlo_Step_GPU); d_W, d_easy: strength and lab easy axis (rp_ghrl) per surface.
-__device__ float (*bulk_potentialGPU)(float ni[3], float nj[3], Parameters *params, float rij[3], int nk);
+__device__ float (*bulk_potentialGPU)(float ni[3], float nj[3], Parameters *params, float rij[3]);
 __device__ int (*xBoundary_GPU)(int &ii, int NN);
 __device__ int (*yBoundary_GPU)(int &ii, int NN);
 __device__ int (*zBoundary_GPU)(int &ii, int NN);

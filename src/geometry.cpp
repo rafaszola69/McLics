@@ -30,7 +30,7 @@ float Geometry::bond_energy(const nni fullni[]) {
     rij[0] = 1;
     rij[1] = 0;
     rij[2] = 0;
-    E += bulk_potential(ni, nj, params, rij, 1);
+    E += bulk_potential(ni, nj, params, rij);
   }
 
   if (fullni[2].pt) {
@@ -38,7 +38,7 @@ float Geometry::bond_energy(const nni fullni[]) {
     rij[0] = -1;
     rij[1] = 0;
     rij[2] = 0;
-    E += bulk_potential(ni, nj, params, rij, 1);
+    E += bulk_potential(ni, nj, params, rij);
   }
 
   if (fullni[3].pt) {
@@ -46,7 +46,7 @@ float Geometry::bond_energy(const nni fullni[]) {
     rij[0] = 0;
     rij[1] = 1;
     rij[2] = 0;
-    E += bulk_potential(ni, nj, params, rij, 1);
+    E += bulk_potential(ni, nj, params, rij);
   }
 
   if (fullni[4].pt) {
@@ -54,7 +54,7 @@ float Geometry::bond_energy(const nni fullni[]) {
     rij[0] = 0;
     rij[1] = -1;
     rij[2] = 0;
-    E += bulk_potential(ni, nj, params, rij, 1);
+    E += bulk_potential(ni, nj, params, rij);
   }
 
   if (fullni[5].pt) {
@@ -62,7 +62,7 @@ float Geometry::bond_energy(const nni fullni[]) {
     rij[0] = 0;
     rij[1] = 0;
     rij[2] = 1;
-    E += bulk_potential(ni, nj, params, rij, 1);
+    E += bulk_potential(ni, nj, params, rij);
   }
 
   if (fullni[6].pt) {
@@ -70,7 +70,7 @@ float Geometry::bond_energy(const nni fullni[]) {
     rij[0] = 0;
     rij[1] = 0;
     rij[2] = -1;
-    E += bulk_potential(ni, nj, params, rij, 1);
+    E += bulk_potential(ni, nj, params, rij);
   }
   return E;
 }

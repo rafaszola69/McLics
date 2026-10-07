@@ -8,7 +8,7 @@
 
 // GPU copies of the pair potentials and field coupling of potential.cpp (see the comments there); keep identical.
 
-__device__ float Bulk_Energy_Selinger_Pear_GPU(float ni[3], float nj[3], Parameters *params, float rij[3], int nk){
+__device__ float Bulk_Energy_Selinger_Pear_GPU(float ni[3], float nj[3], Parameters *params, float rij[3]){
 
   float nij, polar_splay;
       nij=ni[0]*nj[0]+ni[1]*nj[1]+ni[2]*nj[2];
@@ -17,13 +17,13 @@ __device__ float Bulk_Energy_Selinger_Pear_GPU(float ni[3], float nj[3], Paramet
   return (-params->A*nij*nij -params->B1*nij - (params->C*0.25)*polar_splay);
 }
 
-__device__ float Bulk_Energy_Lebwohl_Lasher_GPU(float ni[3], float nj[3], Parameters *params, float rij[3], int nk){
+__device__ float Bulk_Energy_Lebwohl_Lasher_GPU(float ni[3], float nj[3], Parameters *params, float rij[3]){
 
   float nij=ni[0]*nj[0]+ni[1]*nj[1]+ni[2]*nj[2];
   return -params->A*1.5*nij*nij;
 }
 
-__device__ float Bulk_Energy_GHRL_GPU(float ni[3], float nj[3], Parameters *params, float rij[3], int nk){
+__device__ float Bulk_Energy_GHRL_GPU(float ni[3], float nj[3], Parameters *params, float rij[3]){
   
   const float el=params->ghrl_lambda;
   const float em=params->ghrl_mu;

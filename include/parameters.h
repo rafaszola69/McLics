@@ -78,8 +78,6 @@ struct Parameters {
   float k33 = 1;
   float p0 = 0;
 
-  //Neighbourhood: only nearest neighbours (nk = 1) are supported
-  int neighbourKind = 1;
 
   //Electric Field Variables
   float elecX  = 0;

@@ -168,7 +168,6 @@ seed        1
 | Parameter | Values | Default | Description |
 |---|---|---|---|
 | `Nx`, `Ny`, `Nz` | integer | 16 | Lattice size along each axis |
-| `Nk` (`neighbour_kind`) | `1` | 1 | Neighbour shell. **Only `1` (nearest neighbours) is supported**; any other value stops the program |
 | `geometry` | `bulk` / `slab` / `sphere` / `custom` | `bulk` | Geometry of the sample |
 | `boundary_file` | path | — | Geometry file (`geometry custom`) |
 | `xbound`, `ybound`, `zbound` | `free` / `periodic` | `free` | Boundary condition along each axis |
@@ -555,7 +554,6 @@ mclics/
 
 ## Notes
 
-- Only nearest neighbours are used (**`Nk = 1`**); any other value stops the program with an error message.
 - The choice between CPU and GPU is made by the **suffix of `evol`** (e.g. `thermal` vs. `thermalGPU`), not by a
   command-line option. The program built by `make` runs both; the one built by `make CPU` only accepts the modes
   without the `GPU` suffix.

@@ -31,7 +31,7 @@ def main():
         if n == 0 or (c, m, th, L, 0) not in best:
             continue
         dt = t - best[(c, m, th, L, 0)]
-        if dt <= 0.2 * t:  # the steps must dominate the run, otherwise the difference is noise
+        if dt <= 0.1 * t:  # the steps must be a sizable part of the run, otherwise the difference is noise
             print("warning: %s %s %d threads: the %d steps take %.2f s of %.2f s; increase SCALE" % (c, m, th, n, dt, t))
             continue
         cost[(c, m, th)] = (dt, 1e9 * dt / (n * L ** 3), n, L)

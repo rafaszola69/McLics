@@ -1,0 +1,10 @@
+# 2026-10-06 21:03
+# CPU: AMD Ryzen 7 5700X 8-Core Processor (16 logical CPUs)
+# GPU: NVIDIA GeForce RTX 4070, 610.57.04
+# mclics: /home/zola/.bin/mclics  no git
+# gcc: 11  nvcc: V11.5.119
+# 2026-10-06 21:22
+# CPU: AMD Ryzen 7 5700X 8-Core Processor (16 logical CPUs)
+# GPU: NVIDIA GeForce RTX 4070, 610.57.04
+# mclics: /home/zola/.bin/mclics  no git
+# gcc: 11  nvcc: V11.5.119

@@ -30,3 +30,6 @@ DONE
 /paper/latex/
 CLAUDE.md
 /tests/regression/out/
+
+# Side studies outside the paper (local only)
+spheres/

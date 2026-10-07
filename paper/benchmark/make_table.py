@@ -15,14 +15,17 @@ import os
 from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CASES = [("ll32", r"LL, $32^3$"), ("ll64", r"LL, $64^3$"), ("ll128", r"LL, $128^3$"), ("ghrl64", r"GHRL, $64^3$")]
+CASES = [("ll32", r"LL, $32^3$"), ("ll64", r"LL, $64^3$"), ("ll128", r"LL, $128^3$"), ("ll256", r"LL, $256^3$"),
+         ("ghrl64", r"GHRL, $64^3$")]
 
 
 def main():
     best = defaultdict(lambda: float("inf"))
+    alltimes = defaultdict(list)
     for r in csv.DictReader(open(os.path.join(HERE, "results.csv"))):
         key = (r["case"], r["mode"], int(r["threads"]), int(r["L"]), int(r["steps"]))
         best[key] = min(best[key], float(r["real_s"]))
+        alltimes[key].append(float(r["real_s"]))
     cost = {}  # (case, mode, threads) -> (seconds of MC, ns per site update, N, L)
     for (c, m, th, L, n), t in best.items():
         if n == 0 or (c, m, th, L, 0) not in best:
@@ -32,6 +35,17 @@ def main():
             print("warning: %s %s %d threads: the %d steps take %.2f s of %.2f s; increase SCALE" % (c, m, th, n, dt, t))
             continue
         cost[(c, m, th)] = (dt, 1e9 * dt / (n * L ** 3), n, L)
+    # spread of the repetitions: each run with N steps minus the fastest run with 0 steps
+    spread = {}
+    for (c, m, th), (dt, ns, n, L) in cost.items():
+        ts = [t - best[(c, m, th, L, 0)] for t in alltimes[(c, m, th, L, n)]]
+        if len(ts) > 1:
+            spread[(c, m, th)] = (max(ts) - min(ts)) / min(ts)
+    if spread:
+        worst = max(spread, key=spread.get)
+        print("repetitions: %d; largest spread %.1f%% (%s %s %d threads), median %.1f%%" % (
+            max(len(v) for v in alltimes.values()), 100 * spread[worst], worst[0], worst[1], worst[2],
+            100 * sorted(spread.values())[len(spread) // 2]))
     modes = sorted({(m, th) for (c, m, th) in cost}, key=lambda x: (x[0] == "gpu", x[1]))
     cases = [(c, lab) for c, lab in CASES if any(k[0] == c for k in cost)]
 

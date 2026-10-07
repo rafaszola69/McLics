@@ -1,12 +1,12 @@
 # Performance of the Monte Carlo step (appendix of the paper)
 
 Time per site update of the Monte Carlo step on one CPU thread, on all cores with OpenMP and on the GPU, for the
-Lebwohl–Lasher potential in periodic boxes of 32³, 64³ and 128³ sites and for the GHRL potential (E7 constants)
+Lebwohl–Lasher potential in periodic boxes of 32³, 64³, 128³ and 256³ sites and for the GHRL potential (E7 constants)
 in 64³ sites.
 
 ```bash
 cd paper/benchmark
-./run.sh                 # 1 thread, 8 and 16 threads, GPU; about 15-30 minutes on a desktop
+REPEAT=3 ./run.sh        # 1 thread, 8 and 16 threads, GPU; about 40 minutes on a desktop
 python3 make_table.py    # -> table.tex
 ```
 

@@ -135,8 +135,18 @@ def main():
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
+    # Same style as the other figures of the paper (paper/examples/make_figures.py); the panel is (d) of the
+    # Freedericksz figure, below the cell cross-sections (a)-(c) of make_cells.py, with the same width (88 mm).
+    ink, ink2, grid = "#0b0b0b", "#52514e", "#e4e3df"
+    plt.rcParams.update({
+        "font.family": "serif", "mathtext.fontset": "stix", "font.serif": ["STIXGeneral", "DejaVu Serif"],
+        "font.size": 8, "axes.labelsize": 8, "legend.fontsize": 7, "xtick.labelsize": 7, "ytick.labelsize": 7,
+        "axes.edgecolor": ink2, "axes.labelcolor": ink, "xtick.color": ink2, "ytick.color": ink2,
+        "axes.spines.top": False, "axes.spines.right": False, "axes.grid": True, "grid.color": grid,
+        "grid.linewidth": 0.5, "savefig.dpi": 300, "figure.facecolor": "white",
+    })
     res, lines, table = {}, [], {}
-    fig, ax = plt.subplots(figsize=(4.6, 3.4))
+    fig, ax = plt.subplots(figsize=(88 / 25.4, 60 / 25.4))
     colors = {"splay": "#2a78d6", "twist": "#eb6834", "bend": "#3a9a4a"}
     for cell, axis, label in CELLS:
         runs = sorted(d for d in glob.glob(os.path.join(args.runs, cell, "seed*"))
@@ -158,18 +168,19 @@ def main():
         lines.append("%-6s seeds %d  E_c = %s +- %s   E(20 deg) = %s   per seed: %s" % (
             cell, len(runs), "%.4f" % ec if ec else "n/a", "%.4f" % err, "%.4f" % e20 if e20 else "n/a",
             " ".join("%.4f" % x for x in per_seed)))
-        ax.plot(E, mean, color=colors[cell], lw=1.6, label=label)
+        ax.plot(E, mean, color=colors[cell], lw=1.2, label=label)
         if len(runs) > 1:
             ax.fill_between(E, th.min(axis=0), th.max(axis=0), color=colors[cell], alpha=0.18, lw=0)
         if ec:
             ax.axvline(ec, color=colors[cell], ls="--", lw=0.8)
-    ax.set_xlabel("Field $E$")
-    ax.set_ylabel(r"Deformation angle at mid-cell (deg)")
+    ax.set_ylabel(r"deformation angle at mid-cell (degrees)")
+    ax.set_xlabel("field $E$")
     ax.set_ylim(0, 90)
+    ax.set_yticks([0, 30, 60, 90])
     ax.legend(frameon=False, loc="upper left")
-    fig.tight_layout()
+    ax.text(-0.02, 1.02, "(d)", transform=ax.transAxes, ha="right", va="bottom", fontsize=9, color=ink)
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(args.out, "fig_freedericksz.%s" % ext), dpi=300)
+        fig.savefig(os.path.join(args.out, "fig_freedericksz.%s" % ext), bbox_inches="tight")
 
     if all(c in res and res[c][0] for c in ("splay", "twist", "bend")):
         es, et, eb = (res[c][0] for c in ("splay", "twist", "bend"))

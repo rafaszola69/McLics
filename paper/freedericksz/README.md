@@ -18,6 +18,7 @@ Since E_c² ∝ K_i, the critical fields give K1/K2 = (E_c splay / E_c twist)² 
 cd paper/freedericksz
 ./run.sh            # the three cells, 2 seeds each, on the GPU (EVOL=electric for the CPU)
 python3 make_figures.py
+python3 make_cells.py   # cross-sections of the three cells (needs figs/numbers.txt from make_figures.py)
 ```
 
 Defaults: T = 0.0008 (as in Le Masurier et al.), W = 10 on both plates, field 0.1 → 1.2 in steps of 0.005, 40000 sweeps at each field value
@@ -31,6 +32,9 @@ the thresholds are overestimated (the twist one most) and the ratios of elastic 
 
 - `figs/fig_freedericksz.pdf` — mid-cell deformation angle versus field for the three cells (band: range over the
   seeds; dashed lines: critical fields).
+- `figs/fig_freedericksz_cells.pdf` — central x-z cross-sections of the three cells at E = 1.3 E_c (`--ratio`),
+  director segments coloured by the deformation angle θ = arccos|n·n0|, in the style of the droplet sections of
+  `paper/examples`.
 - `figs/numbers.txt` — critical fields (with the error of the mean over the seeds), the ratios K1/K2 and K3/K2, and
   the critical fields of the continuum theory for the same cell, E_c = π/(d + 2b)·√(K*/2Δε) with K* = Λ*K_i/K_2,
   b = K*/(2W) and d = Nz − 1 (no free parameter).
